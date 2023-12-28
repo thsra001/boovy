@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 bevy = "0.12.1"
 bevy-inspector-egui = "0.21.0"
+bevy_third_person_camera = "0.1.7"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]

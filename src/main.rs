@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_third_person_camera::*;
 mod player;
 use player::LocalPlayerManager;
 
@@ -16,8 +17,11 @@ fn main() {
             }),
             ..default()
         }))
-        .add_plugins(WorldInspectorPlugin::new())
-        .add_plugins(LocalPlayerManager)
+        .add_plugins((
+            WorldInspectorPlugin::new(),
+            LocalPlayerManager,
+            ThirdPersonCameraPlugin,
+        ))
         .add_systems(Startup, hello_world)
         .add_systems(Startup, setup)
         .run();
@@ -61,9 +65,19 @@ fn setup(
         .insert(Name::new("pointLight"));
     // camera
     commands
-        .spawn(Camera3dBundle {
-            transform: Transform::from_xyz(9.5, 6.0, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
-            ..default()
-        })
+        .spawn((
+            Camera3dBundle {
+                transform: Transform::from_xyz(9.5, 6.0, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
+                ..default()
+            },
+            ThirdPersonCamera{
+                offset_enabled: true,
+                offset: Offset::new(0.5, 0.3),
+                zoom: Zoom::new(1.5, 3.0),
+                offset_toggle_key: KeyCode::T,
+                cursor_lock_key: KeyCode::ShiftLeft,
+                ..default()
+            },
+        ))
         .insert(Name::new("camera"));
 }
