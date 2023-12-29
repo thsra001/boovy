@@ -10,6 +10,7 @@ struct Speed(f32);
 #[derive(Component)]
 struct TypeSymbol;
 
+
 impl Plugin for LocalPlayerManager {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, make_player);

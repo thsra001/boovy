@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_rapier3d::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_third_person_camera::*;
 mod player;
@@ -17,6 +18,8 @@ fn main() {
             }),
             ..default()
         }))
+        .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugins(RapierDebugRenderPlugin::default())
         .add_plugins((
             WorldInspectorPlugin::new(),
             LocalPlayerManager,
@@ -73,11 +76,15 @@ fn setup(
             ThirdPersonCamera{
                 offset_enabled: true,
                 offset: Offset::new(0.5, 0.3),
-                zoom: Zoom::new(1.5, 3.0),
+                zoom: Zoom::new(1.5, 6.0),
                 offset_toggle_key: KeyCode::T,
                 cursor_lock_key: KeyCode::ShiftLeft,
                 ..default()
             },
         ))
         .insert(Name::new("camera"));
+    // delete 
+    commands.spawn(RigidBody::Fixed)
+        .insert(TransformBundle::from(Transform::from_xyz(0.0, 5.0, 0.0)))
+        .insert(Collider::capsule_y(0.5,0.5));
 }
