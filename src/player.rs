@@ -11,6 +11,7 @@ struct Speed(f32);
 struct TypeSymbol;
 
 
+
 impl Plugin for LocalPlayerManager {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, make_player);
@@ -45,7 +46,7 @@ fn player_movement(
         };
 
         let mut dir = Vec3::ZERO;
-
+        let mut new_transform=plr_move.clone();
         if input.pressed(KeyCode::W) {
             dir += cam.forward();
         }   
@@ -64,10 +65,15 @@ fn player_movement(
         
         dir.y=0.0;
         let moves = dir.normalize_or_zero() * plr_wroom.0 * time.delta_seconds();
-        plr_move.translation += moves;
+        new_transform.translation += moves;
 
         if dir.length_squared() > 0.0 {
-            plr_move.look_to(dir, Vec3::Y)
+            new_transform.look_to(dir, Vec3::Y);
+
+            plr_move.rotation=plr_move.rotation.slerp(new_transform.rotation, 10.0*time.delta_seconds());
+            plr_move.translation += moves;
         }
+
+        
     }
 }
