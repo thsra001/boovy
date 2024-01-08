@@ -8,14 +8,17 @@ use player::LocalPlayerManager;
 mod part;
 use part::PartUtils;
 
+#[derive(Component)]
+struct DaSky;
 
-//mod part;
 
 use std::f32::consts::PI;
 
 fn list_mats() {
     println!("yup i hoops dis works");
 }
+
+
 
 fn main() {
     App::new()
@@ -35,6 +38,8 @@ fn main() {
             PartUtils,
         ))
         .add_systems(Startup, list_mats)
+        .add_systems(Startup, skybox_setup)
+        .add_systems(PostUpdate, skybox_move)
         .add_systems(Startup, set_window_icon)
         .add_systems(Startup, setup)
         .run();
@@ -50,6 +55,7 @@ fn setup(
         .spawn(PbrBundle {
             mesh: meshes.add(shape::Box::new(25.0, 1.0, 25.0).into()),
             material: materials.add(Color::rgb_u8(23, 123, 21).into()),
+            
             ..default()
         })
         .insert(Name::new("floorPlaneMesh"))
@@ -60,6 +66,7 @@ fn setup(
         .insert(TransformBundle::from(Transform::from_xyz(0.0, 0.5, 0.0)))
         .insert(Collider::cuboid(12.5, 0.5, 12.5))
         .insert(Name::new("floorPlane"))
+        .insert(InheritedVisibility::default())
         .id();
 
     commands.entity(physics).add_child(floor_plane);
@@ -67,7 +74,7 @@ fn setup(
     // cube
     let cube = commands
         .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+            mesh: meshes.add(Mesh::from(shape::Cube { size: 2.0 })),
             material: materials.add(Color::rgb_u8(7, 152, 173).into()),
             ..default()
         })
@@ -77,8 +84,9 @@ fn setup(
     let physics = commands
         .spawn(RigidBody::Dynamic)
         .insert(TransformBundle::from(Transform::from_xyz(0.0, 10.5, 0.0)))
-        .insert(Collider::cuboid(0.5, 0.5, 0.5))
+        .insert(Collider::cuboid(1.0, 1.0, 1.0))
         .insert(Name::new("Cube"))
+        .insert(InheritedVisibility::default())
         .id();
 
     commands.entity(physics).add_child(cube);
@@ -130,6 +138,24 @@ fn setup(
             },
         ))
         .insert(Name::new("camera"));
+}
+
+fn skybox_setup(server: Res<AssetServer>, mut commands: Commands) {
+    commands
+        .spawn(SceneBundle {
+            scene: server.load("sky.glb#Scene0"),
+            ..default()
+        })
+        .insert(DaSky)
+        .insert(Name::new("Sky"));
+}
+fn skybox_move(
+    get_cam: Query<&Transform, With<Camera3d>>,
+    mut get_sky: Query<&mut Transform, (With<DaSky>,Without<Camera3d>)>,
+) {
+    let mut skoy = get_sky.get_single_mut().unwrap();
+    let cam_pos = get_cam.get_single().unwrap();
+    skoy.translation = cam_pos.translation;
 }
 
 fn set_window_icon(

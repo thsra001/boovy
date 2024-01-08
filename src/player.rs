@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_third_person_camera::*;
 
+
 pub struct LocalPlayerManager;
 
 #[derive(Component)]
@@ -16,7 +17,7 @@ struct ObjectType;
 impl Plugin for LocalPlayerManager {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, make_player);
-        app.add_systems(Update, player_movement);
+        app.add_systems(PreUpdate, player_movement);
     }
 }
 
@@ -28,30 +29,21 @@ fn make_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             //transform: Transform::from_xyz(0.0, 0.25, -0.1),
             ..default()
         })
-        .insert(Name::new("LocalPlayer"))
+        .insert(Name::new("LocalPlayerMesh"))
         .insert(LocaPlayer)
         .insert(Speed(10.0))
         .id();
 
     // character physics collider
     let physics = commands
-        .spawn(RigidBody::KinematicPositionBased)
+        .spawn(RigidBody::Dynamic)
+        .insert(LockedAxes::ROTATION_LOCKED)
         .insert(TransformBundle::from(Transform::from_xyz(-4.0, 2.2, 0.0)))
         .insert(Collider::round_cylinder(1.0, 0.4, 0.2))
-        .insert(KinematicCharacterController {
-            offset: CharacterLength::Absolute(0.05),
-            max_slope_climb_angle: 45.0_f32.to_radians(),
-            min_slope_slide_angle: 30.0_f32.to_radians(),
-            autostep: Some(CharacterAutostep {
-                max_height: CharacterLength::Relative(0.3),
-                min_width: CharacterLength::Relative(0.5),
-                include_dynamic_bodies: true,
-            }),
-            ..default()
-        })
-        .insert(Name::new("localPlayerCollider"))
+        .insert(Name::new("localPlayer"))
         .insert(LocalPlayerCollider)
         .insert(ThirdPersonCameraTarget)
+        .insert(InheritedVisibility::default())
         .id();
 
     commands.entity(physics).add_child(plr);
@@ -97,6 +89,9 @@ fn player_movement(
 
         if input.pressed(KeyCode::D) {
             dir += cam.right();
+        }
+        if input.pressed(KeyCode::Space){
+
         }
 
         dir.y = 0.0;
