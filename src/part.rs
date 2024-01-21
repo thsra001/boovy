@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, transform::commands};
 //use bevy_rapier3d::prelude::*;
 use std::fs;
 
@@ -37,4 +37,7 @@ fn get_mats(mut commands: Commands, asset_server: Res<AssetServer>) {
             .id();
         commands.entity(mat_holder).add_child(chill);
     }
+}
+fn make_part(mut commands:Commands){
+    let mut part=1;
 }

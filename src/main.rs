@@ -11,14 +11,7 @@ use part::PartUtils;
 #[derive(Component)]
 struct DaSky;
 
-
 use std::f32::consts::PI;
-
-fn list_mats() {
-    println!("yup i hoops dis works");
-}
-
-
 
 fn main() {
     App::new()
@@ -37,11 +30,8 @@ fn main() {
             ThirdPersonCameraPlugin,
             PartUtils,
         ))
-        .add_systems(Startup, list_mats)
-        .add_systems(Startup, skybox_setup)
         .add_systems(PostUpdate, skybox_move)
-        .add_systems(Startup, set_window_icon)
-        .add_systems(Startup, setup)
+        .add_systems(Startup, (skybox_setup, set_window_icon, setup))
         .run();
 }
 
@@ -52,13 +42,15 @@ fn setup(
 ) {
     // square base
     let floor_plane = commands
-        .spawn(PbrBundle {
-            mesh: meshes.add(shape::Box::new(25.0, 1.0, 25.0).into()),
-            material: materials.add(Color::rgb_u8(23, 123, 21).into()),
-            
-            ..default()
-        })
-        .insert(Name::new("floorPlaneMesh"))
+        .spawn((
+            PbrBundle {
+                mesh: meshes.add(shape::Box::new(25.0, 1.0, 25.0).into()),
+                material: materials.add(Color::rgb_u8(23, 123, 21).into()),
+
+                ..default()
+            },
+            Name::new("floorPlaneMesh"),
+        ))
         .id();
 
     let physics = commands
@@ -73,12 +65,14 @@ fn setup(
 
     // cube
     let cube = commands
-        .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 2.0 })),
-            material: materials.add(Color::rgb_u8(7, 152, 173).into()),
-            ..default()
-        })
-        .insert(Name::new("cubeMesh"))
+        .spawn((
+            PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Cube { size: 2.0 })),
+                material: materials.add(Color::rgb_u8(7, 152, 173).into()),
+                ..default()
+            },
+            Name::new("cubeMesh"),
+        ))
         .id();
 
     let physics = commands
@@ -104,19 +98,20 @@ fn setup(
                 rotation: Quat::from_rotation_x(-PI / 4.),
                 ..default()
             },
-            // I STOLE THIS FROM THE EXAMPLE PAGE LMAOOOO
+            // I STOLE THIS FROM THE EXAMPLE PAGE
             // The default cascade config is designed to handle large scenes.
             // As this example has a much smaller world, we can tighten the shadow
             // bounds for better visual quality.
             cascade_shadow_config: CascadeShadowConfigBuilder {
                 first_cascade_far_bound: 4.0,
-                maximum_distance: 10.0,
+                maximum_distance: 1000.0,
+                num_cascades: 4,
                 ..default()
             }
             .into(),
             ..default()
         })
-        .insert(Name::new("pointLight"));
+        .insert(Name::new("DirectionalLight"));
     // ambientLight
     commands.insert_resource(AmbientLight {
         color: Color::hex("#adc3f7").unwrap(),
@@ -131,7 +126,7 @@ fn setup(
             },
             ThirdPersonCamera {
                 offset_enabled: true,
-                offset: Offset::new(0.0, 0.3),
+                offset: Offset::new(0.0, 0.8),
                 zoom: Zoom::new(1.5, 10.0),
                 cursor_lock_key: KeyCode::ShiftLeft,
                 ..default()
@@ -149,13 +144,18 @@ fn skybox_setup(server: Res<AssetServer>, mut commands: Commands) {
         .insert(DaSky)
         .insert(Name::new("Sky"));
 }
+
 fn skybox_move(
     get_cam: Query<&Transform, With<Camera3d>>,
-    mut get_sky: Query<&mut Transform, (With<DaSky>,Without<Camera3d>)>,
+    mut get_sky: Query<&mut Transform, (With<DaSky>, Without<Camera3d>)>,
 ) {
     let mut skoy = get_sky.get_single_mut().unwrap();
     let cam_pos = get_cam.get_single().unwrap();
     skoy.translation = cam_pos.translation;
+}
+
+fn make_part(PartType: &str) {
+    println!("yup i hoops dis works");
 }
 
 fn set_window_icon(
