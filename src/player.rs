@@ -56,7 +56,7 @@ fn make_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn player_movement(
-    input: Res<Input<KeyCode>>,
+    input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
     mut get_player: Query<(&mut Transform, &Speed), With<LocaPlayer>>,
     mut get_collider: Query<
@@ -85,24 +85,24 @@ fn player_movement(
 
         let mut dir = Vec3::ZERO;
         let mut new_transform = col_trans.clone();
-        if input.pressed(KeyCode::W) {
-            dir += cam.forward();
+        if input.pressed(KeyCode::KeyW) {
+            dir += *cam.forward();
         }
 
-        if input.pressed(KeyCode::A) {
-            dir += cam.left();
+        if input.pressed(KeyCode::KeyA) {
+            dir += *cam.left();
         }
 
-        if input.pressed(KeyCode::S) {
-            dir += cam.back();
+        if input.pressed(KeyCode::KeyS) {
+            dir += *cam.back();
         }
 
-        if input.pressed(KeyCode::D) {
-            dir += cam.right();
+        if input.pressed(KeyCode::KeyD) {
+            dir += *cam.right();
         }
 
         dir.y = 0.0;
-            if dir.length_squared() > 0.0 || input.pressed(KeyCode::Space) {
+        if dir.length_squared() > 0.0 || input.pressed(KeyCode::Space) {
             let mut moves = dir.normalize_or_zero() * plr_wroom.0 * time.delta_seconds();
             new_transform.look_to(dir, Vec3::Y);
 
@@ -115,7 +115,6 @@ fn player_movement(
             col_vel.linvel.x = moves.x;
             col_vel.linvel.z = moves.z;
         }
-        
     }
 }
 fn player_anim(

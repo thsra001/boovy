@@ -31,7 +31,7 @@ fn main() {
             PartUtils,
         ))
         .add_systems(PostUpdate, skybox_move)
-        .add_systems(Startup, (skybox_setup, set_window_icon, setup))
+        .add_systems(Startup, (skybox_setup, setup)) // system:  set_window_icon  removed
         .run();
 }
 
@@ -44,8 +44,8 @@ fn setup(
     let floor_plane = commands
         .spawn((
             PbrBundle {
-                mesh: meshes.add(shape::Box::new(25.0, 1.0, 25.0).into()),
-                material: materials.add(Color::rgb_u8(23, 123, 21).into()),
+                mesh: meshes.add(Cuboid::new(25.0, 1.0, 25.0)),
+                material: materials.add(Color::rgb_u8(23, 123, 21)),
 
                 ..default()
             },
@@ -67,8 +67,8 @@ fn setup(
     let cube = commands
         .spawn((
             PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Cube { size: 2.0 })),
-                material: materials.add(Color::rgb_u8(7, 152, 173).into()),
+                mesh: meshes.add(Mesh::from(Cuboid::new(2.0, 2.0, 2.0))),
+                material: materials.add(Color::rgb(2.0, 0.1, 0.0)),
                 ..default()
             },
             Name::new("cubeMesh"),
@@ -157,8 +157,9 @@ fn skybox_move(
 fn make_part(PartType: &str) {
     println!("yup i hoops dis works");
 }
-
+/*
 fn set_window_icon(
+
     // we have to use `NonSend` here
     // ill never understand this looool
     windows: NonSend<WinitWindows>,
@@ -175,8 +176,14 @@ fn set_window_icon(
     };
     let icon = Icon::from_rgba(icon_rgba, icon_width, icon_height).unwrap();
 
-    // do it for all windows
+    //  do it for all windows
+
     for window in windows.windows.values() {
         window.set_window_icon(Some(icon.clone()));
     }
+
+    TODO: this got fucked, will try again if brave
+
+
 }
+*/

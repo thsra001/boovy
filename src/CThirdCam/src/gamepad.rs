@@ -15,7 +15,7 @@ impl Plugin for GamePadPlugin {
             Update,
             (
                 connections,
-                (orbit_gamepad, zoom_gamepad).run_if(resource_exists::<GamepadResource>()),
+                (orbit_gamepad, zoom_gamepad).run_if(resource_exists::<GamepadResource>),
             ),
         );
     }
@@ -44,7 +44,7 @@ fn connections(
 }
 
 pub fn zoom_gamepad(
-    btns: Res<Input<GamepadButton>>,
+    btns: Res<ButtonInput<GamepadButton>>,
     gamepad_res: Option<Res<GamepadResource>>,
     mut cam_q: Query<&mut ThirdPersonCamera, With<ThirdPersonCamera>>,
 ) {
@@ -77,7 +77,7 @@ pub fn zoom_gamepad(
 pub fn orbit_gamepad(
     window_q: Query<&Window, With<PrimaryWindow>>,
     mut cam_q: Query<(&ThirdPersonCamera, &mut Transform), With<ThirdPersonCamera>>,
-    btns: Res<Input<GamepadButton>>,
+    btns: Res<ButtonInput<GamepadButton>>,
     axis: Res<Axis<GamepadAxis>>,
     gamepad_res: Option<Res<GamepadResource>>,
 ) {
@@ -88,7 +88,9 @@ pub fn orbit_gamepad(
         return;
     };
 
-    let Ok((cam, mut cam_transform)) = cam_q.get_single_mut() else { return };
+    let Ok((cam, mut cam_transform)) = cam_q.get_single_mut() else {
+        return;
+    };
 
     if cam.mouse_orbit_button_enabled && !btns.pressed(cam.gamepad_settings.mouse_orbit_button) {
         return;
