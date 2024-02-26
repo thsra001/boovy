@@ -1,22 +1,29 @@
 use std::f32::consts::PI;
 
+use crate::{zoom_condition, ThirdPersonCamera};
 use bevy::{
     input::mouse::{MouseMotion, MouseWheel},
     prelude::*,
+    transform::TransformSystem,
     window::PrimaryWindow,
 };
-
-use crate::{zoom_condition, ThirdPersonCamera};
+use bevy_rapier3d::plugin::PhysicsSet;
 
 pub struct MousePlugin;
 
 impl Plugin for MousePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            Update,
+            PostUpdate,
             (
-                orbit_mouse.run_if(orbit_condition),
-                zoom_mouse.run_if(zoom_condition),
+                orbit_mouse
+                    .run_if(orbit_condition)
+                    .before(TransformSystem::TransformPropagate)
+                    .after(PhysicsSet::Writeback),
+                zoom_mouse
+                    .run_if(zoom_condition)
+                    .before(TransformSystem::TransformPropagate)
+                    .after(PhysicsSet::Writeback),
             )
                 .chain(),
         );

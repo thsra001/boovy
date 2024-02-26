@@ -4,18 +4,25 @@ use crate::{GamepadResource, ThirdPersonCamera};
 use bevy::{
     input::gamepad::{GamepadConnection::*, *},
     prelude::*,
+    transform::TransformSystem,
     window::PrimaryWindow,
 };
+use bevy_rapier3d::plugin::PhysicsSet;
 
 pub struct GamePadPlugin;
 
 impl Plugin for GamePadPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            Update,
+            PostUpdate,
             (
-                connections,
-                (orbit_gamepad, zoom_gamepad).run_if(resource_exists::<GamepadResource>),
+                connections
+                    .before(TransformSystem::TransformPropagate)
+                    .after(PhysicsSet::Writeback),
+                (orbit_gamepad, zoom_gamepad)
+                    .run_if(resource_exists::<GamepadResource>)
+                    .before(TransformSystem::TransformPropagate)
+                    .after(PhysicsSet::Writeback),
             ),
         );
     }

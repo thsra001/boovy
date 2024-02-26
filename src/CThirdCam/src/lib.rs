@@ -1,10 +1,11 @@
 mod gamepad;
 mod mouse;
-
 use bevy::{
     prelude::*,
+    transform::TransformSystem,
     window::{CursorGrabMode, PrimaryWindow},
 };
+use bevy_rapier3d::plugin::PhysicsSet;
 use gamepad::{orbit_gamepad, GamePadPlugin};
 use mouse::{orbit_mouse, MousePlugin};
 
@@ -13,7 +14,7 @@ use mouse::{orbit_mouse, MousePlugin};
 /// ```
 /// use bevy::prelude::*;
 /// use bevy_third_person_camera::ThirdPersonCameraPlugin;
-/// fn main() {
+/// fn main() {TransformSystemaf
 ///     App::new().add_plugins(ThirdPersonCameraPlugin);
 /// }
 /// ```
@@ -22,12 +23,24 @@ pub struct ThirdPersonCameraPlugin;
 impl Plugin for ThirdPersonCameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((MousePlugin, GamePadPlugin)).add_systems(
-            Update,
+            PostUpdate,
             (
-                aim.run_if(aim_condition),
-                sync_player_camera.after(orbit_mouse).after(orbit_gamepad),
-                toggle_x_offset.run_if(toggle_x_offset_condition),
-                toggle_cursor.run_if(toggle_cursor_condition),
+                aim.run_if(aim_condition)
+                    .before(TransformSystem::TransformPropagate)
+                    .after(PhysicsSet::Writeback),
+                sync_player_camera
+                    .before(orbit_mouse)
+                    .before(orbit_gamepad)
+                    .before(TransformSystem::TransformPropagate)
+                    .after(PhysicsSet::Writeback),
+                toggle_x_offset
+                    .run_if(toggle_x_offset_condition)
+                    .before(TransformSystem::TransformPropagate)
+                    .after(PhysicsSet::Writeback),
+                toggle_cursor
+                    .run_if(toggle_cursor_condition)
+                    .before(TransformSystem::TransformPropagate)
+                    .after(PhysicsSet::Writeback),
             ),
         );
     }
@@ -268,7 +281,7 @@ fn aim(
         let desired_zoom = cam.zoom.min * cam.aim_zoom;
 
         // radius_copy is used for restoring the radius (zoom) to it's
-        // original value after releasing the aim button
+        // original value before releasing the aim button
         if cam.zoom.radius_copy.is_none() {
             cam.zoom.radius_copy = Some(cam.zoom.radius);
         }

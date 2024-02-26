@@ -1,8 +1,7 @@
-use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*, winit::WinitWindows};
+use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*, transform::TransformSystem};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use bevy_rapier3d::prelude::*;
+use bevy_rapier3d::{plugin::PhysicsSet, prelude::*};
 use bevy_third_person_camera::*;
-use winit::window::Icon;
 mod player;
 use player::LocalPlayerManager;
 mod part;
@@ -30,7 +29,13 @@ fn main() {
             ThirdPersonCameraPlugin,
             PartUtils,
         ))
-        .add_systems(PostUpdate, skybox_move)
+        .add_systems(
+            PostUpdate,
+            skybox_move
+                .after(PhysicsSet::Writeback)
+                .before(TransformSystem::TransformPropagate)
+                .after(PhysicsSet::Writeback),
+        )
         .add_systems(Startup, (skybox_setup, setup)) // system:  set_window_icon  removed
         .run();
 }
@@ -68,7 +73,7 @@ fn setup(
         .spawn((
             PbrBundle {
                 mesh: meshes.add(Mesh::from(Cuboid::new(2.0, 2.0, 2.0))),
-                material: materials.add(Color::rgb(2.0, 0.1, 0.0)),
+                material: materials.add(Color::hex("a05525").unwrap()),
                 ..default()
             },
             Name::new("cubeMesh"),
@@ -90,7 +95,7 @@ fn setup(
         .spawn(DirectionalLightBundle {
             directional_light: DirectionalLight {
                 shadows_enabled: true,
-                illuminance: 2000.0,
+                illuminance: 1000.0,
                 ..default()
             },
             transform: Transform {
@@ -104,7 +109,7 @@ fn setup(
             // bounds for better visual quality.
             cascade_shadow_config: CascadeShadowConfigBuilder {
                 first_cascade_far_bound: 4.0,
-                maximum_distance: 1000.0,
+                maximum_distance: 200.0,
                 num_cascades: 4,
                 ..default()
             }
@@ -115,7 +120,7 @@ fn setup(
     // ambientLight
     commands.insert_resource(AmbientLight {
         color: Color::hex("#adc3f7").unwrap(),
-        brightness: 0.5,
+        brightness: 500.0,
     });
     // camera
     commands
