@@ -7,7 +7,7 @@ use bevy::{
     transform::TransformSystem,
     window::PrimaryWindow,
 };
-use bevy_rapier3d::plugin::PhysicsSet;
+use bevy_xpbd_3d::PhysicsSet;
 
 pub struct GamePadPlugin;
 
@@ -18,11 +18,11 @@ impl Plugin for GamePadPlugin {
             (
                 connections
                     .before(TransformSystem::TransformPropagate)
-                    .after(PhysicsSet::Writeback),
+                    .after(PhysicsSet::Sync),
                 (orbit_gamepad, zoom_gamepad)
                     .run_if(resource_exists::<GamepadResource>)
                     .before(TransformSystem::TransformPropagate)
-                    .after(PhysicsSet::Writeback),
+                    .after(PhysicsSet::Sync),
             ),
         );
     }

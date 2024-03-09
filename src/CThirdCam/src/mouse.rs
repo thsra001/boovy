@@ -7,7 +7,7 @@ use bevy::{
     transform::TransformSystem,
     window::PrimaryWindow,
 };
-use bevy_rapier3d::plugin::PhysicsSet;
+use bevy_xpbd_3d::PhysicsSet;
 
 pub struct MousePlugin;
 
@@ -19,11 +19,11 @@ impl Plugin for MousePlugin {
                 orbit_mouse
                     .run_if(orbit_condition)
                     .before(TransformSystem::TransformPropagate)
-                    .after(PhysicsSet::Writeback),
+                    .after(PhysicsSet::Sync),
                 zoom_mouse
                     .run_if(zoom_condition)
                     .before(TransformSystem::TransformPropagate)
-                    .after(PhysicsSet::Writeback),
+                    .after(PhysicsSet::Sync),
             )
                 .chain(),
         );

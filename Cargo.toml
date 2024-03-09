@@ -7,11 +7,13 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.13.0"
-bevy_rapier3d = "0.25.0"
+bevy_xpbd_3d = {version = "0.4.2"}
 bevy-inspector-egui = "0.23.1"
 winit = "0.28"
 image = "0.24.0"
 bevy_third_person_camera = { path = "src/CThirdCam" }
+strum = "0.26"
+strum_macros = "0.26"
 
 
 # Enable a small amount of optimization in debug mode

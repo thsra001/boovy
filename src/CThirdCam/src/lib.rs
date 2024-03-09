@@ -5,7 +5,7 @@ use bevy::{
     transform::TransformSystem,
     window::{CursorGrabMode, PrimaryWindow},
 };
-use bevy_rapier3d::plugin::PhysicsSet;
+use bevy_xpbd_3d::PhysicsSet;
 use gamepad::{orbit_gamepad, GamePadPlugin};
 use mouse::{orbit_mouse, MousePlugin};
 
@@ -27,20 +27,20 @@ impl Plugin for ThirdPersonCameraPlugin {
             (
                 aim.run_if(aim_condition)
                     .before(TransformSystem::TransformPropagate)
-                    .after(PhysicsSet::Writeback),
+                    .after(PhysicsSet::Sync),
                 sync_player_camera
                     .before(orbit_mouse)
                     .before(orbit_gamepad)
                     .before(TransformSystem::TransformPropagate)
-                    .after(PhysicsSet::Writeback),
+                    .after(PhysicsSet::Sync),
                 toggle_x_offset
                     .run_if(toggle_x_offset_condition)
                     .before(TransformSystem::TransformPropagate)
-                    .after(PhysicsSet::Writeback),
+                    .after(PhysicsSet::Sync),
                 toggle_cursor
                     .run_if(toggle_cursor_condition)
                     .before(TransformSystem::TransformPropagate)
-                    .after(PhysicsSet::Writeback),
+                    .after(PhysicsSet::Sync),
             ),
         );
     }

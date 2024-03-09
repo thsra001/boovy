@@ -1,7 +1,7 @@
 use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*, transform::TransformSystem};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use bevy_rapier3d::{plugin::PhysicsSet, prelude::*};
 use bevy_third_person_camera::*;
+use bevy_xpbd_3d::{prelude::*, PhysicsSet};
 mod player;
 use player::LocalPlayerManager;
 mod part;
@@ -21,8 +21,7 @@ fn main() {
             }),
             ..default()
         }))
-        .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugins(RapierDebugRenderPlugin::default())
+        .add_plugins((PhysicsPlugins::default(), PhysicsDebugPlugin::default()))
         .add_plugins((
             WorldInspectorPlugin::new(),
             LocalPlayerManager,
@@ -32,11 +31,11 @@ fn main() {
         .add_systems(
             PostUpdate,
             skybox_move
-                .after(PhysicsSet::Writeback)
-                .before(TransformSystem::TransformPropagate)
-                .after(PhysicsSet::Writeback),
+                .after(PhysicsSet::Sync)
+                //.before(bevy_third_person_camera::ThirdPersonCameraPlugin::) TODO: i give up
+                .before(TransformSystem::TransformPropagate),
         )
-        .add_systems(Startup, (skybox_setup, setup)) // system:  set_window_icon  removed
+        .add_systems(Startup, (skybox_setup, setup))
         .run();
 }
 
@@ -46,49 +45,30 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // square base
-    let floor_plane = commands
-        .spawn((
-            PbrBundle {
-                mesh: meshes.add(Cuboid::new(25.0, 1.0, 25.0)),
-                material: materials.add(Color::rgb_u8(23, 123, 21)),
+    commands.spawn((
+        PbrBundle {
+            mesh: meshes.add(Cuboid::new(25.0, 1.0, 25.0)),
+            material: materials.add(Color::rgb_u8(23, 123, 21)),
 
-                ..default()
-            },
-            Name::new("floorPlaneMesh"),
-        ))
-        .id();
-
-    let physics = commands
-        .spawn(RigidBody::Fixed)
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, 0.5, 0.0)))
-        .insert(Collider::cuboid(12.5, 0.5, 12.5))
-        .insert(Name::new("floorPlane"))
-        .insert(InheritedVisibility::default())
-        .id();
-
-    commands.entity(physics).add_child(floor_plane);
+            ..default()
+        },
+        Name::new("floorPlaneMesh"),
+        RigidBody::Static,
+        Collider::cuboid(25.0, 1.0, 25.0),
+    ));
 
     // cube
-    let cube = commands
-        .spawn((
-            PbrBundle {
-                mesh: meshes.add(Mesh::from(Cuboid::new(2.0, 2.0, 2.0))),
-                material: materials.add(Color::hex("a05525").unwrap()),
-                ..default()
-            },
-            Name::new("cubeMesh"),
-        ))
-        .id();
-
-    let physics = commands
-        .spawn(RigidBody::Dynamic)
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, 10.5, 0.0)))
-        .insert(Collider::cuboid(1.0, 1.0, 1.0))
-        .insert(Name::new("Cube"))
-        .insert(InheritedVisibility::default())
-        .id();
-
-    commands.entity(physics).add_child(cube);
+    commands.spawn((
+        PbrBundle {
+            mesh: meshes.add(Mesh::from(Cuboid::new(2.0, 2.0, 2.0))),
+            material: materials.add(Color::hex("a05525").unwrap()),
+            transform: Transform::from_xyz(0.0, 1.5, 0.0),
+            ..default()
+        },
+        Name::new("cube"),
+        RigidBody::Dynamic,
+        Collider::cuboid(2.0, 2.0, 2.0),
+    ));
 
     // Dirlight
     commands
