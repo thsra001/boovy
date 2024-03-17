@@ -18,7 +18,7 @@ pub struct Anim(Vec<Handle<AnimationClip>>);
 impl Plugin for LocalPlayerManager {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, make_player);
-        app.add_systems(PreUpdate, (player_movement, player_anim));
+        app.add_systems(Update, (player_movement, player_anim));
     }
 }
 
@@ -35,7 +35,7 @@ fn make_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         Speed(130.0),
         RigidBody::Dynamic,
         LockedAxes::ROTATION_LOCKED,
-        LinearDamping(0.1),
+        LinearDamping(0.75),
         Collider::capsule(1.5, 0.6),
         ThirdPersonCameraTarget,
     ));
@@ -71,7 +71,6 @@ fn player_movement(
         if input.pressed(KeyCode::KeyD) {
             dir += *cam.right();
         }
-
         dir.y = 0.0;
         if dir.length_squared() > 0.0 {
             let mut moves = dir.normalize_or_zero() * plr_wroom.0 * time.delta_seconds();

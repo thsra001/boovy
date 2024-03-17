@@ -1,13 +1,11 @@
 use std::f32::consts::PI;
 
-use crate::{GamepadResource, ThirdPersonCamera};
+use crate::{CamTrans, GamepadResource, ThirdPersonCamera};
 use bevy::{
     input::gamepad::{GamepadConnection::*, *},
     prelude::*,
-    transform::TransformSystem,
     window::PrimaryWindow,
 };
-use bevy_xpbd_3d::PhysicsSet;
 
 pub struct GamePadPlugin;
 
@@ -16,13 +14,10 @@ impl Plugin for GamePadPlugin {
         app.add_systems(
             PostUpdate,
             (
-                connections
-                    .before(TransformSystem::TransformPropagate)
-                    .after(PhysicsSet::Sync),
+                connections.in_set(CamTrans::During),
                 (orbit_gamepad, zoom_gamepad)
                     .run_if(resource_exists::<GamepadResource>)
-                    .before(TransformSystem::TransformPropagate)
-                    .after(PhysicsSet::Sync),
+                    .in_set(CamTrans::During),
             ),
         );
     }

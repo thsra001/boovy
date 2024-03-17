@@ -20,29 +20,44 @@ use mouse::{orbit_mouse, MousePlugin};
 /// ```
 pub struct ThirdPersonCameraPlugin;
 
+//make set before camera move and transform propogate
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum CamTrans {
+    During,
+    After,
+}
+
 impl Plugin for ThirdPersonCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((MousePlugin, GamePadPlugin)).add_systems(
-            PostUpdate,
-            (
-                aim.run_if(aim_condition)
-                    .before(TransformSystem::TransformPropagate)
-                    .after(PhysicsSet::Sync),
-                sync_player_camera
-                    .before(orbit_mouse)
-                    .before(orbit_gamepad)
-                    .before(TransformSystem::TransformPropagate)
-                    .after(PhysicsSet::Sync),
-                toggle_x_offset
-                    .run_if(toggle_x_offset_condition)
-                    .before(TransformSystem::TransformPropagate)
-                    .after(PhysicsSet::Sync),
-                toggle_cursor
-                    .run_if(toggle_cursor_condition)
-                    .before(TransformSystem::TransformPropagate)
-                    .after(PhysicsSet::Sync),
-            ),
-        );
+        app.add_plugins((MousePlugin, GamePadPlugin))
+            .configure_sets(
+                PostUpdate,
+                (
+                    CamTrans::During
+                        .before(TransformSystem::TransformPropagate)
+                        .after(PhysicsSet::Sync),
+                    CamTrans::After
+                        .before(TransformSystem::TransformPropagate)
+                        .after(PhysicsSet::Sync)
+                        .after(CamTrans::During),
+                ),
+            )
+            .add_systems(
+                PostUpdate,
+                (
+                    aim.run_if(aim_condition).in_set(CamTrans::During),
+                    sync_player_camera
+                        .before(orbit_mouse)
+                        .before(orbit_gamepad)
+                        .in_set(CamTrans::During),
+                    toggle_x_offset
+                        .run_if(toggle_x_offset_condition)
+                        .in_set(CamTrans::During),
+                    toggle_cursor
+                        .run_if(toggle_cursor_condition)
+                        .in_set(CamTrans::During),
+                ),
+            );
     }
 }
 

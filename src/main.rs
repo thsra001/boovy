@@ -1,11 +1,11 @@
-use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*, transform::TransformSystem};
+use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_third_person_camera::*;
-use bevy_xpbd_3d::{prelude::*, PhysicsSet};
+use bevy_xpbd_3d::prelude::*;
 mod player;
 use player::LocalPlayerManager;
 mod part;
-use part::PartUtils;
+use part::{part_factory, MaterialType, ObjectType, PartUtils};
 
 #[derive(Component)]
 struct DaSky;
@@ -28,13 +28,7 @@ fn main() {
             ThirdPersonCameraPlugin,
             PartUtils,
         ))
-        .add_systems(
-            PostUpdate,
-            skybox_move
-                .after(PhysicsSet::Sync)
-                //.before(bevy_third_person_camera::ThirdPersonCameraPlugin::) TODO: i give up
-                .before(TransformSystem::TransformPropagate),
-        )
+        .add_systems(PostUpdate, skybox_move.in_set(CamTrans::After))
         .add_systems(Startup, (skybox_setup, setup))
         .run();
 }
@@ -45,6 +39,16 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // square base
+    let bonk = part_factory(
+        ObjectType::BasicObject,
+        &mut commands,
+        &mut materials,
+        &mut meshes,
+    );
+    commands
+        .entity(bonk)
+        .insert((RigidBody::Static, Name::new("base")));
+
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(Cuboid::new(25.0, 1.0, 25.0)),
@@ -55,6 +59,7 @@ fn setup(
         Name::new("floorPlaneMesh"),
         RigidBody::Static,
         Collider::cuboid(25.0, 1.0, 25.0),
+        MaterialType::Grass,
     ));
 
     // cube

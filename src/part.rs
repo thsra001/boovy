@@ -3,14 +3,16 @@ use bevy_xpbd_3d::{
     components::{AngularDamping, LinearDamping, RigidBody},
     plugins::collision::Collider,
 };
-//use bevy_rapier3d::prelude::*;
 use std::fs;
+use std::str::FromStr;
+use strum_macros::EnumString;
 use strum_macros::IntoStaticStr;
 pub struct PartUtils;
 
 impl Plugin for PartUtils {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, (get_mats, setyp));
+        app.add_systems(Update, material_reflect);
         app.register_type::<MaterialType>();
         app.register_type::<MatColour>();
         app.register_type::<MatMetalRough>();
@@ -18,10 +20,13 @@ impl Plugin for PartUtils {
         app.register_type::<ObjectType>();
     }
 }
-
+#[derive(Component)]
+struct MaterialTemplate;
+#[derive(Component)]
+struct MaterialManager;
 // loops trough mats folder and gets mats
-#[derive(Component, Reflect)]
-enum MaterialType {
+#[derive(Component, Reflect, EnumString, PartialEq)]
+pub enum MaterialType {
     Grass,
     Sand,
     Wood,
@@ -29,12 +34,12 @@ enum MaterialType {
 }
 // type of object. a piece is a mesh, a sound
 #[derive(Component, Reflect, IntoStaticStr)]
-enum ObjectType {
+pub enum ObjectType {
     BasicObject,
     MeshObject,
 }
 #[derive(Component, Reflect)]
-enum BasicObjectShape {
+pub enum BasicObjectShape {
     Cube,
     Cyllinder,
     Wedge,
@@ -59,7 +64,9 @@ struct PhysicsBundle {
 //  mcolour: asset_server.load(pat.clone() + "/color.png")
 fn get_mats(mut commands: Commands, asset_server: Res<AssetServer>) {
     println!("yup");
-    let mat_holder = commands.spawn(Name::new("materialManager")).id();
+    let mat_holder = commands
+        .spawn((Name::new("materialManager"), MaterialManager))
+        .id();
     let paths = fs::read_dir("./assets/mats").unwrap();
 
     for path in paths {
@@ -68,17 +75,19 @@ fn get_mats(mut commands: Commands, asset_server: Res<AssetServer>) {
 
         println!("yup yup: {}", &pat);
         let chill = commands
-            .spawn(Name::new(fold))
+            .spawn(Name::new(fold.clone()))
             .insert(MatColour(asset_server.load(pat.clone() + "/color.png")))
             .insert(MatMetalRough(
                 asset_server.load(pat.clone() + "/metalRough.png"),
             ))
             .insert(MatNormal(asset_server.load(pat.clone() + "/normal.png")))
+            .insert(MaterialTemplate)
+            .insert(MaterialType::from_str(&fold).unwrap())
             .id();
         commands.entity(mat_holder).add_child(chill);
     }
 }
-fn part_factory(
+pub fn part_factory(
     var_obj_type: ObjectType,
     mut commands: &mut Commands,
     mut materials: &mut ResMut<Assets<StandardMaterial>>,
@@ -109,6 +118,30 @@ fn part_factory(
         }
         ObjectType::MeshObject => return commands.spawn_empty().id(), //TODO: mesh part and other types
     };
+}
+
+fn material_reflect(
+    mut object_query: Query<
+        (&MaterialType, &Handle<StandardMaterial>), // query for what material to change into | query for objects material to modify
+        (Changed<MaterialType>, Without<MaterialTemplate>),
+    >, // the query for the object with changed material
+    mut mat_query: Query<
+        (&MaterialType, &MatColour, &MatNormal, &MatMetalRough),
+        With<MaterialTemplate>,
+    >,
+    mut materials: ResMut<Assets<StandardMaterial>>, // query for looping through material templates  TODO: find better way to get material template
+) {
+    for (mat_type, obj_mat) in &mut object_query.iter_mut() {
+        for (typ, col, nor, metrou) in &mut mat_query.iter_mut() {
+            if mat_type == typ {
+                print!("yee");
+                let temp = materials.get_mut(obj_mat).unwrap();
+                temp.base_color_texture = Some(col.0.clone());
+                temp.normal_map_texture = Some(nor.0.clone());
+                temp.metallic_roughness_texture = Some(metrou.0.clone());
+            }
+        }
+    }
 }
 fn setyp(
     mut commands: Commands,
