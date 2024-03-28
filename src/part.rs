@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{math::vec3, prelude::*};
 use bevy_xpbd_3d::{
     components::{AngularDamping, LinearDamping, RigidBody},
     plugins::collision::Collider,
@@ -12,12 +12,13 @@ pub struct PartUtils;
 impl Plugin for PartUtils {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, (get_mats, setyp));
-        app.add_systems(Update, material_reflect);
+        app.add_systems(Update, (material_reflect, scale_reflect));
         app.register_type::<MaterialType>();
         app.register_type::<MatColour>();
         app.register_type::<MatMetalRough>();
         app.register_type::<MatNormal>();
         app.register_type::<ObjectType>();
+        app.register_type::<Scale>();
     }
 }
 #[derive(Component)]
@@ -31,7 +32,12 @@ pub enum MaterialType {
     Sand,
     Wood,
     WoodPlank,
+    Concrete,
+    ConcreteTiles,
 }
+// xpbd has postition, rotation but no scale wtf
+#[derive(Component, Reflect)]
+pub struct Scale(Vec3);
 // type of object. a piece is a mesh, a sound
 #[derive(Component, Reflect, IntoStaticStr)]
 pub enum ObjectType {
@@ -98,7 +104,7 @@ pub fn part_factory(
             return commands
                 .spawn((
                     PhysicsBundle {
-                        collider: Collider::cuboid(2.0, 2.0, 2.0),
+                        collider: Collider::cuboid(1.0, 1.0, 1.0),
                         rigidbody_type: RigidBody::Dynamic,
                     },
                     CommonBundle {
@@ -106,15 +112,21 @@ pub fn part_factory(
                         object_type: var_obj_type,
                     },
                     PbrBundle {
-                        mesh: meshes.add(Cuboid::new(2.0, 2.0, 2.0)),
+                        mesh: meshes.add(
+                            //Cuboid::new(2.0, 2.0, 2.0)
+                            Mesh::from(Cuboid::new(1.0, 1.0, 1.0))
+                                .with_generated_tangents()
+                                .unwrap(),
+                        ),
                         material: materials.add(StandardMaterial { ..default() }),
                         ..default()
                     },
                     MaterialType::WoodPlank,
+                    Scale(vec3(2.0, 2.0, 2.0)),
                     LinearDamping(0.25),
                     AngularDamping(0.2),
                 ))
-                .id()
+                .id();
         }
         ObjectType::MeshObject => return commands.spawn_empty().id(), //TODO: mesh part and other types
     };
@@ -141,6 +153,16 @@ fn material_reflect(
                 temp.metallic_roughness_texture = Some(metrou.0.clone());
             }
         }
+    }
+}
+fn scale_reflect(
+    mut object_query: Query<
+        (&Scale, &mut Transform), // query for what material to change into | query for objects material to modify
+        Changed<Scale>,
+    >,
+) {
+    for (siza, mut tran) in &mut object_query.iter_mut() {
+        tran.scale = siza.0
     }
 }
 fn setyp(

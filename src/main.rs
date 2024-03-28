@@ -1,4 +1,4 @@
-use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*};
+use bevy::{core_pipeline::Skybox, pbr::CascadeShadowConfigBuilder, prelude::*};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_third_person_camera::*;
 use bevy_xpbd_3d::prelude::*;
@@ -21,15 +21,15 @@ fn main() {
             }),
             ..default()
         }))
-        .add_plugins((PhysicsPlugins::default(), PhysicsDebugPlugin::default()))
         .add_plugins((
             WorldInspectorPlugin::new(),
             LocalPlayerManager,
             ThirdPersonCameraPlugin,
             PartUtils,
+            PhysicsPlugins::default(),
+            PhysicsDebugPlugin::default(),
         ))
-        .add_systems(PostUpdate, skybox_move.in_set(CamTrans::After))
-        .add_systems(Startup, (skybox_setup, setup))
+        .add_systems(Startup, setup)
         .run();
 }
 
@@ -37,6 +37,7 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut asset_server: Res<AssetServer>,
 ) {
     // square base
     let bonk = part_factory(
@@ -60,19 +61,6 @@ fn setup(
         RigidBody::Static,
         Collider::cuboid(25.0, 1.0, 25.0),
         MaterialType::Grass,
-    ));
-
-    // cube
-    commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Mesh::from(Cuboid::new(2.0, 2.0, 2.0))),
-            material: materials.add(Color::hex("a05525").unwrap()),
-            transform: Transform::from_xyz(0.0, 1.5, 0.0),
-            ..default()
-        },
-        Name::new("cube"),
-        RigidBody::Dynamic,
-        Collider::cuboid(2.0, 2.0, 2.0),
     ));
 
     // Dirlight
@@ -102,78 +90,29 @@ fn setup(
             ..default()
         })
         .insert(Name::new("DirectionalLight"));
-    // ambientLight
-    commands.insert_resource(AmbientLight {
-        color: Color::hex("#adc3f7").unwrap(),
-        brightness: 500.0,
-    });
-    // camera
-    commands
-        .spawn((
-            Camera3dBundle {
-                transform: Transform::from_xyz(9.5, 6.0, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
-                ..default()
-            },
-            ThirdPersonCamera {
-                offset_enabled: true,
-                offset: Offset::new(0.0, 0.8),
-                zoom: Zoom::new(1.5, 10.0),
-                cursor_lock_key: KeyCode::ShiftLeft,
-                ..default()
-            },
-        ))
-        .insert(Name::new("camera"));
-}
-
-fn skybox_setup(server: Res<AssetServer>, mut commands: Commands) {
-    commands
-        .spawn(SceneBundle {
-            scene: server.load("sky.glb#Scene0"),
+    // camera with ambientlight()
+    let skypath = asset_server.load("cube.ktx2");
+    commands.spawn((
+        Camera3dBundle {
+            transform: Transform::from_xyz(9.5, 6.0, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..default()
-        })
-        .insert(DaSky)
-        .insert(Name::new("Sky"));
+        },
+        ThirdPersonCamera {
+            offset_enabled: true,
+            offset: Offset::new(0.0, 0.8),
+            zoom: Zoom::new(1.5, 10.0),
+            cursor_lock_key: KeyCode::ShiftLeft,
+            ..default()
+        },
+        Skybox {
+            image: skypath.clone(),
+            brightness: 500.0,
+        },
+        EnvironmentMapLight {
+            diffuse_map: asset_server.load("cube.ktx2"),
+            specular_map: asset_server.load("cube.ktx2"),
+            intensity: 100.0,
+        },
+        Name::new("camera"),
+    ));
 }
-
-fn skybox_move(
-    get_cam: Query<&Transform, With<Camera3d>>,
-    mut get_sky: Query<&mut Transform, (With<DaSky>, Without<Camera3d>)>,
-) {
-    let mut skoy = get_sky.get_single_mut().unwrap();
-    let cam_pos = get_cam.get_single().unwrap();
-    skoy.translation = cam_pos.translation;
-}
-
-fn make_part(PartType: &str) {
-    println!("yup i hoops dis works");
-}
-/*
-fn set_window_icon(
-
-    // we have to use `NonSend` here
-    // ill never understand this looool
-    windows: NonSend<WinitWindows>,
-) {
-    // here we use the `image` crate to load our icon data from a png file
-    // this is not a very bevy-native solution, but it will do
-    let (icon_rgba, icon_width, icon_height) = {
-        let image = image::open("assets/logo.png")
-            .expect("Failed to open icon path")
-            .into_rgba8();
-        let (width, height) = image.dimensions();
-        let rgba = image.into_raw();
-        (rgba, width, height)
-    };
-    let icon = Icon::from_rgba(icon_rgba, icon_width, icon_height).unwrap();
-
-    //  do it for all windows
-
-    for window in windows.windows.values() {
-        window.set_window_icon(Some(icon.clone()));
-    }
-
-    TODO: this got fucked, will try again if brave
-
-
-}
-*/
