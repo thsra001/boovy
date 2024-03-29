@@ -1,11 +1,11 @@
-use bevy::{core_pipeline::Skybox, pbr::CascadeShadowConfigBuilder, prelude::*};
+use bevy::{core_pipeline::Skybox, math::vec3, pbr::CascadeShadowConfigBuilder, prelude::*};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_third_person_camera::*;
 use bevy_xpbd_3d::prelude::*;
 mod player;
 use player::LocalPlayerManager;
 mod part;
-use part::{part_factory, MaterialType, ObjectType, PartUtils};
+use part::{part_factory, MaterialType, ObjectType, PartUtils, Scale};
 
 #[derive(Component)]
 struct DaSky;
@@ -46,22 +46,23 @@ fn setup(
         &mut materials,
         &mut meshes,
     );
-    commands
-        .entity(bonk)
-        .insert((RigidBody::Static, Name::new("base")));
-
-    commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Cuboid::new(25.0, 1.0, 25.0)),
-            material: materials.add(Color::rgb_u8(23, 123, 21)),
-
-            ..default()
-        },
-        Name::new("floorPlaneMesh"),
+    commands.entity(bonk).insert((
         RigidBody::Static,
-        Collider::cuboid(25.0, 1.0, 25.0),
+        Name::new("ground"),
+        Position(vec3(0.0, -1.0, 0.0)),
+        Scale(vec3(25.0, 1.0, 25.0)),
         MaterialType::Grass,
     ));
+    //cube
+    let cubis = part_factory(
+        ObjectType::BasicObject,
+        &mut commands,
+        &mut materials,
+        &mut meshes,
+    );
+    commands
+        .entity(cubis)
+        .insert((Name::new("cube"), Position(vec3(0.0, 1.0, 0.0))));
 
     // Dirlight
     commands
@@ -90,7 +91,8 @@ fn setup(
             ..default()
         })
         .insert(Name::new("DirectionalLight"));
-    // camera with ambientlight()
+
+    // camera with ambientlight(env)
     let skypath = asset_server.load("cube.ktx2");
     commands.spawn((
         Camera3dBundle {

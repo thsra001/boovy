@@ -11,8 +11,8 @@ pub struct PartUtils;
 
 impl Plugin for PartUtils {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, (get_mats, setyp));
-        app.add_systems(Update, (material_reflect, scale_reflect));
+        app.add_systems(Startup, get_mats);
+        app.add_systems(Update, (material_reflect, Scale_reflect));
         app.register_type::<MaterialType>();
         app.register_type::<MatColour>();
         app.register_type::<MatMetalRough>();
@@ -35,9 +35,9 @@ pub enum MaterialType {
     Concrete,
     ConcreteTiles,
 }
-// xpbd has postition, rotation but no scale wtf
+// xpbd has postition, rotation but no Scale wtf
 #[derive(Component, Reflect)]
-pub struct Scale(Vec3);
+pub struct Scale(pub Vec3);
 // type of object. a piece is a mesh, a sound
 #[derive(Component, Reflect, IntoStaticStr)]
 pub enum ObjectType {
@@ -113,7 +113,6 @@ pub fn part_factory(
                     },
                     PbrBundle {
                         mesh: meshes.add(
-                            //Cuboid::new(2.0, 2.0, 2.0)
                             Mesh::from(Cuboid::new(1.0, 1.0, 1.0))
                                 .with_generated_tangents()
                                 .unwrap(),
@@ -121,7 +120,7 @@ pub fn part_factory(
                         material: materials.add(StandardMaterial { ..default() }),
                         ..default()
                     },
-                    MaterialType::WoodPlank,
+                    MaterialType::Concrete,
                     Scale(vec3(2.0, 2.0, 2.0)),
                     LinearDamping(0.25),
                     AngularDamping(0.2),
@@ -155,7 +154,7 @@ fn material_reflect(
         }
     }
 }
-fn scale_reflect(
+fn Scale_reflect(
     mut object_query: Query<
         (&Scale, &mut Transform), // query for what material to change into | query for objects material to modify
         Changed<Scale>,
@@ -164,19 +163,4 @@ fn scale_reflect(
     for (siza, mut tran) in &mut object_query.iter_mut() {
         tran.scale = siza.0
     }
-}
-fn setyp(
-    mut commands: Commands,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-) {
-    let cubis = part_factory(
-        ObjectType::BasicObject,
-        &mut commands,
-        &mut materials,
-        &mut meshes,
-    );
-    commands
-        .entity(cubis)
-        .insert(Transform::from_xyz(0.0, 5.0, 0.0));
 }

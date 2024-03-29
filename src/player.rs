@@ -30,7 +30,7 @@ fn make_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             transform: Transform::from_xyz(0.0, 2.25, 10.0),
             ..default()
         },
-        Name::new("LocalPlayerMesh"),
+        Name::new("LocalPlayer"),
         LocaPlayer,
         Speed(130.0),
         RigidBody::Dynamic,
