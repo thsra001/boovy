@@ -1,6 +1,12 @@
 {
     "rust-analyzer.linkedProjects": [
         "./Cargo.toml",
+        "./Cargo.toml",
+        "./Cargo.toml",
+        "./Cargo.toml",
+        "./Cargo.toml",
+        "./Cargo.toml",
+        "./Cargo.toml",
         "./Cargo.toml"
     ],
     "editor.fontFamily": "'Comic Mono','Droid Sans Mono', 'monospace', monospace"

@@ -8,7 +8,7 @@ pub struct LocalPlayerManager;
 struct LocaPlayer;
 #[derive(Component)]
 struct LocalPlayerCollider;
-#[derive(Component)]
+#[derive(Reflect, Component)]
 struct Speed(f32);
 #[derive(Component)]
 struct ObjectType;
@@ -19,6 +19,7 @@ impl Plugin for LocalPlayerManager {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, make_player);
         app.add_systems(Update, (player_movement, player_anim));
+        app.register_type::<Speed>();
     }
 }
 

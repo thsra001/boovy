@@ -1,9 +1,17 @@
-use bevy::{core_pipeline::Skybox, math::vec3, pbr::CascadeShadowConfigBuilder, prelude::*};
+// bevy 13.2
+
+use bevy::{
+    app::AppExit, core_pipeline::Skybox, math::vec3, pbr::CascadeShadowConfigBuilder, prelude::*,
+    window::ExitCondition,
+};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_third_person_camera::*;
 use bevy_xpbd_3d::prelude::*;
+// local modules
 mod player;
 use player::LocalPlayerManager;
+mod Bui;
+use Bui::BoovyCreatorUi;
 mod part;
 use part::{part_factory, MaterialType, ObjectType, PartUtils, Scale};
 
@@ -16,24 +24,27 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                title: "Thsra001's bevy gaum!1!!".into(),
+                title: "Boovy creator".into(),
                 ..default()
             }),
-            ..default()
+            exit_condition: ExitCondition::OnPrimaryClosed, // Close our app when all windows close
+            close_when_requested: true,
         }))
         .add_plugins((
             WorldInspectorPlugin::new(),
-            LocalPlayerManager,
+            //LocalPlayerManager,
             ThirdPersonCameraPlugin,
             PartUtils,
+            BoovyCreatorUi,
             PhysicsPlugins::default(),
             PhysicsDebugPlugin::default(),
         ))
-        .add_systems(Startup, setup)
+        .add_systems(Update, kys)
+        //.add_systems(Startup, test_setup)
         .run();
 }
 
-fn setup(
+fn test_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -117,4 +128,9 @@ fn setup(
         },
         Name::new("camera"),
     ));
+}
+fn kys(input: Res<ButtonInput<KeyCode>>, mut exit: EventWriter<AppExit>) {
+    if input.pressed(KeyCode::Escape) {
+        exit.send(AppExit);
+    }
 }

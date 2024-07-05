@@ -6,13 +6,55 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.13.1"
-bevy_obj = "*"
+# remove bevy ui for lunex
+bevy = { version = "0.13.2", default_features = false, features = [
+    # Core
+    "animation",
+    "bevy_asset",
+    "bevy_audio",
+    "bevy_gilrs",
+    "bevy_scene",
+    "bevy_winit",
+    "bevy_core_pipeline",
+    "bevy_pbr",
+    "bevy_gltf",
+    "bevy_render",
+    "bevy_sprite",
+    "bevy_text",
+    # "bevy_ui",    bevy lunex replaces it
+    "multi-threaded",
+    "png",
+    "hdr",
+    "vorbis",
+    "x11",
+    "bevy_gizmos",
+    "android_shared_stdcxx",
+    "tonemapping_luts",
+    "default_font",
+    "webgl2",
+    "bevy_debug_stepping",
+
+    # Core formats
+    "png",    # PNG image format for simple 2D images
+    "hdr",    # HDR images
+    "ktx2",   # Preferred format for GPU textures
+    "zstd",   # ZSTD compression support in KTX2 files
+    "vorbis", # Audio: OGG Vorbis
+] }
+bevy_obj = "0.13.0"
 bevy_xpbd_3d = "0.4.2"
-bevy-inspector-egui = "0.23.1"
-winit = "0.28"
-image = "0.24.0"
+bevy-inspector-egui = "0.24.0"
 bevy_third_person_camera = { path = "src/CThirdCam" }
+
+#bevy lunex and dependencies
+bevy_lunex = {  version = "0.1.0"}
+bevy_mod_picking = { version = "0.19.0", default_features = false, features = [
+    "debug",
+    "selection",
+    "highlight",
+] }
+bevy_eventlistener = "0.7.0"  # maybe uncesscery
+
 strum = "0.26"
 strum_macros = "0.26"
 
