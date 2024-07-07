@@ -18,7 +18,7 @@ pub struct Anim(Vec<Handle<AnimationClip>>);
 impl Plugin for LocalPlayerManager {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, make_player);
-        app.add_systems(Update, (player_movement, player_anim));
+        app.add_systems(Update, (player_movement)); // , player_anim add when fixed
         app.register_type::<Speed>();
     }
 }
@@ -89,11 +89,40 @@ fn player_movement(
         }
     }
 }
-fn player_anim(
-    animations: Res<Anim>,
-    mut get_player_anim: Query<&mut AnimationPlayer, Added<AnimationPlayer>>,
-) {
-    for mut daAnimator in &mut get_player_anim {
-        daAnimator.play(animations.0[0].clone_weak()).repeat();
-    }
-}
+// fuck this man ill fix this later
+// fn player_anim(
+//     animations: Res<Anim>,
+//     mut animations2: ResMut<Assets<AnimationClip>>,
+//     mut get_player_anim: Query<&mut AnimationPlayer, Added<AnimationPlayer>>,
+//     mut graphs: ResMut<Assets<AnimationGraph>>,
+// ) {
+//     for mut daAnimator in &mut get_player_anim {
+//         let (graph, animation_index) =
+//             AnimationGraph::from_clip(animations2.add(animations.0[0].clone_weak()));
+//         daAnimator.play().repeat();
+//     }
+// }
+// fn setup(
+//     mut commands: Commands,
+//     mut animations: ResMut<Assets<AnimationClip>>,
+//     // You now need access to the `AnimationGraph` asset.
+//     mut graphs: ResMut<Assets<AnimationGraph>>,
+// ) {
+//     let mut animation = AnimationClip::default();
+
+//     // ...
+
+//     // Create a new `AnimationGraph` and add the animation handle to it.
+//     let (graph, animation_index) = AnimationGraph::from_clip(animations.add(animation));
+
+//     let mut player = AnimationPlayer::default();
+//     // Play the animation index, not the handle.
+//     player.play(animation_index);
+
+//     commands.spawn((
+//         player,
+//         // Add the new `AnimationGraph` to the assets, and spawn the entity with its handle.
+//         graphs.add(graph),
+//         // ...
+//     ));
+// }

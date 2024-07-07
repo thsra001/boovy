@@ -1,24 +1,31 @@
-// bevy 13.2
 use bevy::prelude::*;
 use bevy_lunex::prelude::*;
-use bevy_lunex::;
-// components/custom_button.rs
-
 /// When this component is added, a UI system is built
 #[derive(Component)]
-pub struct CustomButtom {
+pub struct Topbar {
     // Any fields we want to interact with should be here.
     text: String,
 }
-/// Marker struct for the sandboxed UI
 #[derive(Component)]
-struct CustomButtonUi;
+struct TopbarUi;
+
+pub struct P_Topbar;
+impl Plugin for P_Topbar {
+    fn build(&self, app: &mut App) {
+        app
+            // Add Lunex plugins for our sandboxed UI
+            .add_plugins(UiGenericPlugin::<TopbarUi>::new())
+            // NOTE! Systems changing the UI need to run before UiSystems::Compute
+            // or they will not get picked up by change detection.
+            .add_systems(Update, build_route.before(UiSystems::Compute));
+    }
+}
 
 /// System that builds the route when the component is added
 fn build_route(
     mut commands: Commands,
     assets: Res<AssetServer>,
-    query: Query<Entity, Added<CustomButtom>>,
+    query: Query<Entity, Added<Topbar>>,
 ) {
     for entity in &query {
         commands
@@ -26,7 +33,7 @@ fn build_route(
             .insert((
                 // Insert this bundle into the entity that just got the CustomButtom component
                 // Note that CustomButtonUi is used here instead of MainUi
-                UiTreeBundle::<CustomButtonUi>::from(UiTree::new("CustomButton")),
+                UiTreeBundle::<TopbarUi>::from(UiTree::new("CustomButton")),
                 // Now spawn the UI as children
             ))
             .with_children(|ui| {
@@ -34,14 +41,14 @@ fn build_route(
                 ui.spawn((
                     // Link this widget
                     // Note that CustomButtonUi is used here instead of MainUi
-                    UiLink::<CustomButtonUi>::path("Image"),
+                    UiLink::<TopbarUi>::path("Image"),
                     // Add layout
-                    UiLayout::window_full().pack(),
+                    UiLayout::window_full().pack::<Base>(),
                     // Give it a background image
                     UiImage2dBundle {
                         texture: assets.load("images/button.png"),
                         sprite: Sprite {
-                            color: Color::RED,
+                            color: Color::oklab(0.3, 0.1, 0.7),
                             ..default()
                         },
                         ..default()
@@ -53,18 +60,5 @@ fn build_route(
                     }),
                 ));
             });
-    }
-}
-// components/custom_button.rs
-
-pub struct CustomButtonPlugin;
-impl Plugin for CustomButtonPlugin {
-    fn build(&self, app: &mut App) {
-        app
-            // Add Lunex plugins for our sandboxed UI
-            .add_plugins(UiGenericPlugin::<CustomButtonUi>::new())
-            // NOTE! Systems changing the UI need to run before UiSystems::Compute
-            // or they will not get picked up by change detection.
-            .add_systems(Update, build_route.before(UiSystems::Compute));
     }
 }

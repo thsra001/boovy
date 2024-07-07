@@ -1,6 +1,3 @@
-// bevy 13.2
-// routes/mod.rs
-
 pub mod startpage;
 pub use startpage::*;
 
@@ -12,6 +9,6 @@ impl Plugin for RoutePlugin {
     fn build(&self, app: &mut App) {
         app
             // Add each route plugin
-            .add_plugins(MyRoutePlugin);
+            .add_plugins(PStartpage);
     }
 }

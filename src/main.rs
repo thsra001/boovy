@@ -11,7 +11,7 @@ use bevy_xpbd_3d::prelude::*;
 mod player;
 use player::LocalPlayerManager;
 mod Bui;
-use Bui::BoovyCreatorUi;
+use Bui::CreatorUi;
 mod part;
 use part::{part_factory, MaterialType, ObjectType, PartUtils, Scale};
 
@@ -31,11 +31,11 @@ fn main() {
             close_when_requested: true,
         }))
         .add_plugins((
-            WorldInspectorPlugin::new(),
+            //WorldInspectorPlugin::new(), no 0.14 version yet
             //LocalPlayerManager,
             ThirdPersonCameraPlugin,
             PartUtils,
-            BoovyCreatorUi,
+            CreatorUi,
             PhysicsPlugins::default(),
             PhysicsDebugPlugin::default(),
         ))
@@ -131,6 +131,6 @@ fn test_setup(
 }
 fn kys(input: Res<ButtonInput<KeyCode>>, mut exit: EventWriter<AppExit>) {
     if input.pressed(KeyCode::Escape) {
-        exit.send(AppExit);
+        exit.send(AppExit::Success);
     }
 }
