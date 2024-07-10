@@ -45,9 +45,9 @@ bevy = { version = "0.14.0", default-features = false, features = [
     "zstd",   # ZSTD compression support in KTX2 files
     "vorbis", # Audio: OGG Vorbis
 ] }
-bevy_obj = "0.13.0"
+bevy_obj = "0.14.0"
 bevy_xpbd_3d = "0.5.0"
-bevy-inspector-egui = "0.24.0"
+bevy-inspector-egui = "0.25.0"
 bevy_third_person_camera = { path = "src/CThirdCam" }
 
 #bevy lunex and dependencies

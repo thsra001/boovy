@@ -10,18 +10,18 @@ impl Plugin for PStartpage {
         app
             // NOTE! Systems changing the UI need to run before UiSystems::Compute
             // or they will not get picked up by change detection.
-            .add_systems(Update, build_route.before(UiSystems::Compute));
+            .add_systems(Update, build_startpage.before(UiSystems::Compute));
     }
 }
 
 /// System that builds the route when the component is added
-fn build_route(
+fn build_startpage(
     mut commands: Commands,
     assets: Res<AssetServer>,
     query: Query<Entity, Added<Startpage>>,
+    asset_server: Res<AssetServer>,
 ) {
     for route_entity in &query {
-        println!("new startpage");
         // Make our route a spatial entity
         commands
             .entity(route_entity)
@@ -32,18 +32,22 @@ fn build_route(
                 // Here you can spawn the UI
                 route
                     .spawn((
-                        UiTreeBundle::<MainUi>::from(UiTree::new("MyRoute")),
+                        UiTreeBundle::<MainUi>::from(UiTree::new("startpage")),
                         MovableByCamera,
                     ))
                     .with_children(|ui| {
                         // Spawn some UI nodes
                         ui.spawn((
-                            UiLink::<MainUi>::path("Background"),
+                            // Link the entity
+                            UiLink::<MainUi>::path("Root/Bg"),
+                            // Specify UI layout
                             UiLayout::solid()
-                                .size((1920.0, 1080.0))
+                                .size(Ab((1920.0, 1080.0)))
                                 .scaling(Scaling::Fill)
                                 .pack::<Base>(),
-                            UiImage2dBundle::from(assets.load("images/background.png")),
+                            // Add image to the entity
+                            // UiImage2dBundle::from(asset_server.load("images/bg.png")),
+                            Name::new("background"),
                         ));
                     });
             });

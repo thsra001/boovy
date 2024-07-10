@@ -31,7 +31,7 @@ fn main() {
             close_when_requested: true,
         }))
         .add_plugins((
-            //WorldInspectorPlugin::new(), no 0.14 version yet
+            WorldInspectorPlugin::new(),
             //LocalPlayerManager,
             ThirdPersonCameraPlugin,
             PartUtils,
