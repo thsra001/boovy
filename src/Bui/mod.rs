@@ -1,11 +1,15 @@
 // bevy 13.2
-use bevy::prelude::*;
+use bevy::{prelude::*, sprite::Anchor};
 use bevy_lunex::prelude::*;
 
+mod boiler;
+use boiler::*;
 mod components;
 mod routes;
 use components::*;
 use routes::*;
+
+use crate::BoovyStates;
 
 pub struct CreatorUi; // plugin export// it mark ui ( just treat it like MainUi in lunex docs)
 
@@ -15,16 +19,22 @@ impl Plugin for CreatorUi {
             // twp local plugins
             .add_plugins(ComponentPlugin)  
             .add_plugins(RoutePlugin)       
-            .add_plugins((UiPlugin,UiDebugPlugin::<MainUi>::new()))
+            .add_plugins((UiPlugin,UiDebugPlugin::<(MainUi)>::new()))
             .add_systems(Startup, make_creator_start_ui)
             .insert_resource(ClearColor(Color::oklab(0.2, 0.070, -0.240)))
+            .init_state::<BoovyStates>()
             // bevy lunex
 
             ;
     }
 }
 
-fn make_creator_start_ui(mut commands: Commands, mut asset_server: Res<AssetServer>) {
+fn make_creator_start_ui(
+    mut commands: Commands, 
+    mut asset_server: Res<AssetServer>,
+    mut atlas_layout: ResMut<Assets<TextureAtlasLayout>>,
+    mut event1: EventWriter<actions::SetWindowDecorations>,
+    mut event2: EventWriter<actions::SetWindowResolution>) {
     commands.spawn((
         // Add this marker component provided by Lunex.
         MainUi,
@@ -34,16 +44,37 @@ fn make_creator_start_ui(mut commands: Commands, mut asset_server: Res<AssetServ
             ..default()
         },
         Name::new("mainUi")
-    ));
-
-    commands.spawn((Startpage,Name::new("startpage")));
+    )).with_children(|camera|{
+        camera.spawn(StyledCursorBundle{
+            cursor:Cursor2d::new(),
+            atlas: TextureAtlas{
+                layout: atlas_layout.add(TextureAtlasLayout::from_grid(UVec2::splat(48), 13, 1, None, None)),
+                index: 0,
+            },
+            sprite: SpriteBundle{
+                texture: asset_server.load("images/CurAtlas.png"),
+                transform: Transform { scale: Vec3::new(1.0, 1.0, 1.0), ..default() },
+                sprite: Sprite {
+                    anchor: Anchor::TopLeft,
+                    ..default()
+                },
+                ..default()
+            },
+            ..default()
+        });
+    });
+    // laod cursor2d
     // ui item example > this is also the  mainui
     commands
         .spawn((
             // This makes the UI entity able to receive camera data
             MovableByCamera,
             // This is our UI system
-            UiTreeBundle::<MainUi>::from(UiTree::new("Root")),
+            UiTreeBundle::<MainUi>::from(UiTree::new2d("Root")),
             Name::new("root")
         ));
+    event1.send(actions::SetWindowDecorations(false));
+    event2.send(actions::SetWindowResolution(Vec2::new(1920.0, 1080.0)));
+    commands.spawn((Startpage,Name::new("startpage")));
 }
+

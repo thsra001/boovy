@@ -4,27 +4,34 @@ use bevy_lunex::prelude::*;
 use crate::Bui::{BoovyPalette, ColourBg, LuiBundle};
 /// When this component is added, a UI system is built
 #[derive(Component)]
-pub struct Topbar;
-#[derive(Component)]
-// ui marker
-struct TopbarUi;
+pub struct TopButton {
+    image: Option<Handle<Image>>,
+    text: Option<String>,
+}
+// ui markerTopbar
 
-pub struct PTopbar;
-impl Plugin for PTopbar {
+// ui markerTopbar
+
+#[derive(Component)]
+// ui markerTopbar
+struct TopButtonUi;
+
+pub struct PTopButton;
+impl Plugin for PTopButton {
     fn build(&self, app: &mut App) {
         app
             // Add Lunex plugins for our sandboxed UI
-            .add_plugins(UiGenericPlugin::<TopbarUi>::new())
+            .add_plugins(UiGenericPlugin::<TopButtonUi>::new())
             // NOTE! Systems changing the UI need to run before UiSystems::Compute
             // or they will not get picked up by change detection.
-            .add_systems(Update, build_topbar.before(UiSystems::Compute));
+            .add_systems(Update, build_top_button.before(UiSystems::Compute));
     }
 }
 /// System that builds the route when the component is added
-fn build_topbar(
+fn build_top_button(
     mut commands: Commands,
     assets: Res<AssetServer>,
-    query: Query<Entity, Added<Topbar>>,
+    query: Query<Entity, Added<TopButton>>,
 ) {
     for entity in &query {
         commands
@@ -32,31 +39,21 @@ fn build_topbar(
             .insert((
                 // Insert this bundle into the entity that just got the CustomButtom component
                 // Note that CustomButtonUi is used here instead of MainUi
-                UiTreeBundle::<TopbarUi>::from(UiTree::new2d("Topbar")),
+                UiTreeBundle::<TopButtonUi>::from(UiTree::new2d("TopButton")),
                 // Now spawn the UI as children
             ))
             .with_children(|ui| {
                 // Spawn some UI nodes
                 ui.spawn((
-                    LuiBundle {
-                        path: UiLink::<TopbarUi>::path("Topbar"),
-                        layout: UiLayout::window_full().pack::<Base>(),
-                        name: Name::new("TopbarInner"),
-                    },
+                    // Note that CustomButtonUi is used here instead of MainUi
+                    // TODO: uilink shits itself when its <TopButtonUi> // fix this so LuiBundle works later
+                    UiLink::<TopButtonUi>::path("TopButton"),
+                    UiLayout::window_full().pack::<Base>(),
+                    Name::new("TopButtonInner"),
                     ColourBg {
                         col: Color::LIGHT_GREEN,
                     },
                 ));
-                ui.spawn(LuiBundle {
-                    path: UiLink::<TopbarUi>::path("Topbar/actionbar"),
-                    layout: UiLayout::window().size(Em((6.0, 2.5))).pack::<Base>(),
-                    name: Name::new("actionbar"),
-                });
-                ui.spawn(LuiBundle {
-                    path: UiLink::<TopbarUi>::path("Topbar/navbar"),
-                    layout: UiLayout::window().size(Em((12.0, 2.5))).pack::<Base>(),
-                    name: Name::new("navbar"),
-                });
             });
     }
 }

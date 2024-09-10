@@ -3,52 +3,49 @@ use bevy::prelude::*;
 use bevy_lunex::prelude::*;
 
 use crate::BoovyStates;
-use crate::Bui::project_button;
+use crate::Bui::BoovyPalette;
 use crate::Bui::ColourBg;
 use crate::Bui::LuiBundle;
-use crate::Bui::ProjectB;
-use crate::Bui::Topbar;
-
-use crate::Bui::BoovyPalette;
-
 #[derive(Component)]
-pub struct Startpage;
+pub struct Editor;
 
-pub struct PStartpage;
-impl Plugin for PStartpage {
+pub struct PEditor;
+impl Plugin for PEditor {
     fn build(&self, app: &mut App) {
         app
             // NOTE! Systems changing the UI need to run before UiSystems::Compute
             // or they will not get picked up by change detection.
-            .add_systems(Update, build_startpage.before(UiSystems::Compute));
+            .add_systems(Update, build_editor.before(UiSystems::Compute));
     }
 }
 
 /// System that builds the route when the component is added
-fn build_startpage(
+fn build_editor(
     mut commands: Commands,
     assets: Res<AssetServer>,
-    query: Query<Entity, Added<Startpage>>,
+    query: Query<Entity, Added<Editor>>,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    mut next_state: ResMut<NextState<BoovyStates>>,
 ) {
     for route_entity in &query {
         // Make our route a spatial entity
+
         commands
             .entity(route_entity)
             .insert(SpatialBundle::default())
             .with_children(|route| {
                 // Spawn some additional non UI components if you need to.
-
+                next_state.set(BoovyStates::Game);
+                info!("we goin to editor");
                 // Here you can spawn the UI
                 route
                     .spawn((
                         // uitreebundle is for a top dog of da tree lolololol
-                        UiTreeBundle::<MainUi>::from(UiTree::new2d("startpage")),
+                        UiTreeBundle::<MainUi>::from(UiTree::new2d("Editor")),
                         MovableByCamera,
-                        StateScoped(BoovyStates::Menu),
-                        Name::new("startpageMarker"),
+                        Name::new("EditorMarker"),
                     ))
                     .with_children(|ui| {
                         // Spawn some UI nodes
@@ -63,37 +60,12 @@ fn build_startpage(
                         ));
                         ui.spawn((
                             LuiBundle {
-                                path: root.add("topbar"),
-                                layout: UiLayout::window()
-                                    .size((Rl(100.0), Em(2.5)))
-                                    .pack::<Base>(),
-                                name: Name::new("topbarOuter"),
-                            },
-                            Topbar,
-                            UiDepthBias(30.0),
-                        ));
-                        ui.spawn((
-                            LuiBundle {
                                 path: root.add("Bg"),
-                                layout: UiLayout::window()
-                                    .size((Rl(100.0), Rl(100.0) - Em(2.5)))
-                                    .y(Em(2.5))
-                                    .pack::<Base>(),
-                                name: Name::new("background"),
+                                layout: UiLayout::window_full().pack::<Base>(),
+                                name: Name::new("TreeViewer"),
                             },
                             ColourBg {
                                 col: Color::DARK_GREEN,
-                            },
-                        ));
-                        ui.spawn((
-                            LuiBundle {
-                                path: root.add("Bg/icon"),
-                                layout: UiLayout::window().size(Em((9.0, 11.0))).pack::<Base>(),
-                                name: Name::new("projectButtonOuter"),
-                            },
-                            ProjectB {
-                                project_name: String::from("Le Rectangle"),
-                                project_image: asset_server.load("images/templates/rectangle.png"),
                             },
                         ));
                     });

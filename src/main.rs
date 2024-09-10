@@ -30,6 +30,7 @@ fn main() {
             exit_condition: ExitCondition::OnPrimaryClosed, // Close our app when all windows close
             close_when_requested: true,
         }))
+        .enable_state_scoped_entities::<BoovyStates>()
         .add_plugins((
             WorldInspectorPlugin::new(),
             //LocalPlayerManager,
@@ -42,6 +43,15 @@ fn main() {
         .add_systems(Update, kys)
         //.add_systems(Startup, test_setup)
         .run();
+}
+
+#[derive(States, Default, Debug, Hash, Eq, PartialEq, Clone)]
+pub enum BoovyStates {
+    //#[default]
+    Loading,
+    #[default]
+    Menu,
+    Game,
 }
 
 fn test_setup(
