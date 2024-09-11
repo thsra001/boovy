@@ -104,5 +104,7 @@ fn project_button_click_sys(mut events: EventReader<UiClickEvent>, query: Query<
             // Process our button click
             info!("skbidi my friend");
         }
+        info!(" pressed {}", event.target);
+        info!("sikbi");
     }
 }

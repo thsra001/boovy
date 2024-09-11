@@ -19,7 +19,7 @@ impl Plugin for CreatorUi {
             // twp local plugins
             .add_plugins(ComponentPlugin)  
             .add_plugins(RoutePlugin)       
-            .add_plugins((UiPlugin,UiDebugPlugin::<(MainUi)>::new()))
+            .add_plugins((UiPlugin,UiDebugPlugin::<MainUi>::new()))
             .add_systems(Startup, make_creator_start_ui)
             .insert_resource(ClearColor(Color::oklab(0.2, 0.070, -0.240)))
             .init_state::<BoovyStates>()
@@ -43,7 +43,7 @@ fn make_creator_start_ui(
             transform: Transform::from_xyz(0.0, 0.0, 1000.0),
             ..default()
         },
-        Name::new("mainUi")
+        Name::new("mainUiCamera"),
     )).with_children(|camera|{
         camera.spawn(StyledCursorBundle{
             cursor:Cursor2d::new(),
@@ -73,8 +73,8 @@ fn make_creator_start_ui(
             UiTreeBundle::<MainUi>::from(UiTree::new2d("Root")),
             Name::new("root")
         ));
-    event1.send(actions::SetWindowDecorations(false));
-    event2.send(actions::SetWindowResolution(Vec2::new(1920.0, 1080.0)));
+    //event1.send(actions::SetWindowDecorations(false));
+    //event2.send(actions::SetWindowResolution(Vec2::new(1920.0, 1080.0)));
     commands.spawn((Startpage,Name::new("startpage")));
 }
 

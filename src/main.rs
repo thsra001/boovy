@@ -41,7 +41,7 @@ fn main() {
             PhysicsDebugPlugin::default(),
         ))
         .add_systems(Update, kys)
-        //.add_systems(Startup, test_setup)
+        .add_systems(OnEnter(BoovyStates::Game), test_setup)
         .run();
 }
 

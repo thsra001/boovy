@@ -28,10 +28,12 @@ fn build_editor(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut next_state: ResMut<NextState<BoovyStates>>,
+    mut cam2d: Query<&mut Camera, With<Camera2d>>,
 ) {
     for route_entity in &query {
         // Make our route a spatial entity
-
+        let mut camra = cam2d.get_single_mut().unwrap();
+        camra.is_active = false;
         commands
             .entity(route_entity)
             .insert(SpatialBundle::default())
