@@ -1,24 +1,22 @@
 // bevy 13.2
 
+use avian3d::prelude::*;
 use bevy::{
     app::AppExit, core_pipeline::Skybox, math::vec3, pbr::CascadeShadowConfigBuilder, prelude::*,
     window::ExitCondition,
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_third_person_camera::*;
-use bevy_xpbd_3d::prelude::*;
 // local modules
 mod player;
 use player::LocalPlayerManager;
 mod Bui;
 use Bui::CreatorUi;
 mod part;
-use part::{part_factory, MaterialType, ObjectType, PartUtils, Scale};
-
-#[derive(Component)]
-struct DaSky;
-
+use part::{part_factory, MaterialType, PartUtils, PropType, Scale};
+mod Butils;
 use std::f32::consts::PI;
+use Butils::*;
 
 fn main() {
     App::new()
@@ -33,25 +31,27 @@ fn main() {
         .enable_state_scoped_entities::<BoovyStates>()
         .add_plugins((
             WorldInspectorPlugin::new(),
-            //LocalPlayerManager,
+            LocalPlayerManager,
             ThirdPersonCameraPlugin,
             PartUtils,
             CreatorUi,
             PhysicsPlugins::default(),
             PhysicsDebugPlugin::default(),
+            LoadButils,
         ))
         .add_systems(Update, kys)
-        .add_systems(OnEnter(BoovyStates::Game), test_setup)
+        .add_systems(OnEnter(BoovyStates::Editor), test_setup)
         .run();
 }
 
 #[derive(States, Default, Debug, Hash, Eq, PartialEq, Clone)]
 pub enum BoovyStates {
     //#[default]
-    Loading,
+    Loading, //preloading before showing app
     #[default]
-    Menu,
-    Game,
+    Menu, //  select game to edit
+    Editor,  // editor to edit game
+    Game,    // game testing
 }
 
 fn test_setup(
@@ -60,9 +60,10 @@ fn test_setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut asset_server: Res<AssetServer>,
 ) {
+    let scene = commands.spawn(Name::new("scene"));
     // square base
     let bonk = part_factory(
-        ObjectType::BasicObject,
+        PropType::BasicProp,
         &mut commands,
         &mut materials,
         &mut meshes,
@@ -71,12 +72,16 @@ fn test_setup(
         RigidBody::Static,
         Name::new("ground"),
         Position(vec3(0.0, -1.0, 0.0)),
-        Scale(vec3(25.0, 1.0, 25.0)),
+        Scale(Vec3 {
+            x: 200.0,
+            y: 10.0,
+            z: 100.0,
+        }),
         MaterialType::Grass,
     ));
     //cube
     let cubis = part_factory(
-        ObjectType::BasicObject,
+        PropType::BasicProp,
         &mut commands,
         &mut materials,
         &mut meshes,
@@ -123,8 +128,8 @@ fn test_setup(
         ThirdPersonCamera {
             offset_enabled: true,
             offset: Offset::new(0.0, 0.8),
-            zoom: Zoom::new(1.5, 10.0),
-            cursor_lock_key: KeyCode::ShiftLeft,
+            zoom: Zoom::new(1.5, 100.0),
+            cursor_lock_key: KeyCode::ControlLeft,
             ..default()
         },
         Skybox {
@@ -139,6 +144,7 @@ fn test_setup(
         Name::new("camera"),
     ));
 }
+//fn serialis() {}
 fn kys(input: Res<ButtonInput<KeyCode>>, mut exit: EventWriter<AppExit>) {
     if input.pressed(KeyCode::Escape) {
         exit.send(AppExit::Success);

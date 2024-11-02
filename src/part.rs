@@ -1,8 +1,6 @@
+use avian3d::prelude::*;
 use bevy::{math::vec3, prelude::*};
-use bevy_xpbd_3d::{
-    components::{AngularDamping, LinearDamping, RigidBody},
-    plugins::collision::Collider,
-};
+use bevy_inspector_egui::InspectorOptions;
 use std::fs;
 use std::str::FromStr;
 use strum_macros::EnumString;
@@ -12,12 +10,12 @@ pub struct PartUtils;
 impl Plugin for PartUtils {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, get_mats);
-        app.add_systems(Update, (material_reflect, Scale_reflect));
+        app.add_systems(Update, (material_reflect, scale_reflect));
         app.register_type::<MaterialType>();
         app.register_type::<MatColour>();
         app.register_type::<MatMetalRough>();
         app.register_type::<MatNormal>();
-        app.register_type::<ObjectType>();
+        app.register_type::<PropType>();
         app.register_type::<Scale>();
     }
 }
@@ -26,26 +24,29 @@ struct MaterialTemplate;
 #[derive(Component)]
 struct MaterialManager;
 // loops trough mats folder and gets mats
-#[derive(Component, Reflect, EnumString, PartialEq)]
+#[derive(Component, Reflect, EnumString, PartialEq, Default)]
 pub enum MaterialType {
     Grass,
     Sand,
     Wood,
     WoodPlank,
+    #[default]
     Concrete,
     ConcreteTiles,
 }
 // xpbd has postition, rotation but no Scale wtf
-#[derive(Component, Reflect)]
+#[derive(Component, Reflect, Default, InspectorOptions)]
 pub struct Scale(pub Vec3);
 // type of object. a piece is a mesh, a sound
-#[derive(Component, Reflect, IntoStaticStr)]
-pub enum ObjectType {
-    BasicObject,
-    MeshObject,
+#[derive(Component, Reflect, IntoStaticStr, Default)]
+pub enum PropType {
+    #[default]
+    BasicProp,
+    MeshProp,
 }
-#[derive(Component, Reflect)]
-pub enum BasicObjectShape {
+#[derive(Component, Reflect, Default)]
+pub enum BasicPropShape {
+    #[default]
     Cube,
     Cyllinder,
     Wedge,
@@ -57,16 +58,17 @@ struct MatNormal(Handle<Image>);
 struct MatColour(Handle<Image>);
 #[derive(Component, Reflect)]
 struct MatMetalRough(Handle<Image>);
-#[derive(Bundle)]
-struct CommonBundle {
-    name: Name,
-    object_type: ObjectType,
+#[derive(Bundle, Default)]
+pub struct CommonBundle {
+    pub name: Name,
+    pub prop_type: PropType,
 }
-#[derive(Bundle)]
-struct PhysicsBundle {
-    collider: Collider,
-    rigidbody_type: RigidBody,
+#[derive(Bundle, Default)]
+pub struct PhysicsBundle {
+    pub collider: Collider,
+    pub rigidbody_type: RigidBody,
 }
+
 //  mcolour: asset_server.load(pat.clone() + "/color.png")
 fn get_mats(mut commands: Commands, asset_server: Res<AssetServer>) {
     println!("yup");
@@ -94,13 +96,13 @@ fn get_mats(mut commands: Commands, asset_server: Res<AssetServer>) {
     }
 }
 pub fn part_factory(
-    var_obj_type: ObjectType,
+    var_obj_type: PropType,
     mut commands: &mut Commands,
     mut materials: &mut ResMut<Assets<StandardMaterial>>,
     mut meshes: &mut ResMut<Assets<Mesh>>,
 ) -> bevy::prelude::Entity {
     match var_obj_type {
-        ObjectType::BasicObject => {
+        PropType::BasicProp => {
             return commands
                 .spawn((
                     PhysicsBundle {
@@ -109,7 +111,7 @@ pub fn part_factory(
                     },
                     CommonBundle {
                         name: Name::new(Into::<&'static str>::into(&var_obj_type)),
-                        object_type: var_obj_type,
+                        prop_type: var_obj_type,
                     },
                     PbrBundle {
                         mesh: meshes.add(
@@ -127,22 +129,22 @@ pub fn part_factory(
                 ))
                 .id();
         }
-        ObjectType::MeshObject => return commands.spawn_empty().id(), //TODO: mesh part and other types
+        PropType::MeshProp => return commands.spawn_empty().id(), //TODO: mesh part and other types
     };
 }
 
 fn material_reflect(
-    mut object_query: Query<
-        (&MaterialType, &Handle<StandardMaterial>), // query for what material to change into | query for objects material to modify
+    mut prop_query: Query<
+        (&MaterialType, &Handle<StandardMaterial>), // query for what material to change into | query for Props material to modify
         (Changed<MaterialType>, Without<MaterialTemplate>),
-    >, // the query for the object with changed material
+    >, // the query for the Prop with changed material
     mut mat_query: Query<
         (&MaterialType, &MatColour, &MatNormal, &MatMetalRough),
         With<MaterialTemplate>,
     >,
     mut materials: ResMut<Assets<StandardMaterial>>, // query for looping through material templates  TODO: find better way to get material template
 ) {
-    for (mat_type, obj_mat) in &mut object_query.iter_mut() {
+    for (mat_type, obj_mat) in &mut prop_query.iter_mut() {
         for (typ, col, nor, metrou) in &mut mat_query.iter_mut() {
             if mat_type == typ {
                 print!("yee");
@@ -154,7 +156,7 @@ fn material_reflect(
         }
     }
 }
-fn Scale_reflect(
+fn scale_reflect(
     mut object_query: Query<
         (&Scale, &mut Transform), // query for what material to change into | query for objects material to modify
         Changed<Scale>,

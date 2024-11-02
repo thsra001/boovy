@@ -1,5 +1,3 @@
-use std::default;
-
 use bevy::prelude::*;
 use bevy_lunex::prelude::*;
 /// Custom color palette for Bevypunk

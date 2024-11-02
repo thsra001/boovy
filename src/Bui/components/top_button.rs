@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_lunex::prelude::*;
+use bevy_lunex::{prelude::*, UiCorePlugin};
 
 use crate::Bui::{BoovyPalette, ColourBg, LuiBundle};
 /// When this component is added, a UI system is built
@@ -21,7 +21,7 @@ impl Plugin for PTopButton {
     fn build(&self, app: &mut App) {
         app
             // Add Lunex plugins for our sandboxed UI
-            .add_plugins(UiGenericPlugin::<TopButtonUi>::new())
+            .add_plugins(UiCorePlugin::<TopButtonUi>::new())
             // NOTE! Systems changing the UI need to run before UiSystems::Compute
             // or they will not get picked up by change detection.
             .add_systems(Update, build_top_button.before(UiSystems::Compute));

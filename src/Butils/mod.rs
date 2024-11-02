@@ -1,17 +1,14 @@
-pub mod stateManager;
-pub use stateManager::*;
-pub mod editor;
-pub use editor::*;
+pub mod saveScene;
+pub use saveScene::*;
 
 // #=== ROUTE PLUGIN ===#
 use bevy::prelude::*;
 
-pub struct RoutePlugin;
-impl Plugin for RoutePlugin {
+pub struct LoadButils;
+impl Plugin for LoadButils {
     fn build(&self, app: &mut App) {
         app
             // Add each route plugin
-            .add_plugins(PstateManager)
-            .add_plugins(PEditor);
+            .add_plugins(PSaveScene);
     }
 }

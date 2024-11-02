@@ -19,7 +19,7 @@ impl Plugin for CreatorUi {
             // twp local plugins
             .add_plugins(ComponentPlugin)  
             .add_plugins(RoutePlugin)       
-            .add_plugins((UiPlugin,UiDebugPlugin::<MainUi>::new()))
+            .add_plugins((UiDefaultPlugins,UiDebugPlugin::<MainUi>::new()))
             .add_systems(Startup, make_creator_start_ui)
             .insert_resource(ClearColor(Color::oklab(0.2, 0.070, -0.240)))
             .init_state::<BoovyStates>()
@@ -31,7 +31,7 @@ impl Plugin for CreatorUi {
 
 fn make_creator_start_ui(
     mut commands: Commands, 
-    mut asset_server: Res<AssetServer>,
+    asset_server: Res<AssetServer>,
     mut atlas_layout: ResMut<Assets<TextureAtlasLayout>>,
     mut event1: EventWriter<actions::SetWindowDecorations>,
     mut event2: EventWriter<actions::SetWindowResolution>) {
@@ -41,8 +41,11 @@ fn make_creator_start_ui(
         // Our camera bundle with depth 1000.0 because UI starts at `0` and goes up with each layer.
         Camera2dBundle {
             transform: Transform::from_xyz(0.0, 0.0, 1000.0),
+            camera: Camera{order:1, ..default()},
+
             ..default()
         },
+        InheritedVisibility::VISIBLE,
         Name::new("mainUiCamera"),
     )).with_children(|camera|{
         camera.spawn(StyledCursorBundle{
@@ -68,13 +71,13 @@ fn make_creator_start_ui(
     commands
         .spawn((
             // This makes the UI entity able to receive camera data
-            MovableByCamera,
+            SourceFromCamera,
             // This is our UI system
             UiTreeBundle::<MainUi>::from(UiTree::new2d("Root")),
             Name::new("root")
         ));
     //event1.send(actions::SetWindowDecorations(false));
-    //event2.send(actions::SetWindowResolution(Vec2::new(1920.0, 1080.0)));
+    event2.send(actions::SetWindowResolution(Vec2::new(1920.0, 1080.0)));
     commands.spawn((Startpage,Name::new("startpage")));
 }
 

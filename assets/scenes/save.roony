@@ -1,0 +1,21 @@
+(
+  resources: {},
+  entities: {
+    4294967296: (
+      components: {
+        "bevy_core::name::Name": (
+          hash: 12402110535231031181,
+          name: "Scene",
+        ),
+        "bevy_hierarchy::components::children::Children": ([
+          4294967297,
+        ]),
+      },
+    ),
+    4294967297: (
+      components: {
+        "bevy_hierarchy::components::parent::Parent": (4294967296),
+      },
+    ),
+  },
+)

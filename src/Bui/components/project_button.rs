@@ -1,7 +1,7 @@
-use bevy::{prelude::*, utils::info};
-use bevy_lunex::prelude::*;
+use bevy::prelude::*;
+use bevy_lunex::{prelude::*, UiCorePlugin};
 
-use crate::Bui::{editor, BoovyPalette, ColourBg, Editor, LuiBundle};
+use crate::Bui::{BoovyPalette, ColourBg, Editor, LuiBundle, ScenePath};
 /// When this component is added, a UI system is built
 #[derive(Component)]
 pub struct ProjectB {
@@ -14,13 +14,13 @@ pub struct ProjectB {
 struct ProjectBUi;
 
 #[derive(Component)]
-struct butImg;
+struct ButImg;
 pub struct PProjectB;
 impl Plugin for PProjectB {
     fn build(&self, app: &mut App) {
         app
             // Add Lunex plugins for our sandboxed UI
-            .add_plugins(UiGenericPlugin::<ProjectBUi>::new())
+            .add_plugins(UiCorePlugin::<ProjectBUi>::new())
             // NOTE! Systems changing the UI need to run before UiSystems::Compute
             // or they will not get picked up by change detection.
             .add_systems(Update, build_project_button.before(UiSystems::Compute));
@@ -66,9 +66,9 @@ fn build_project_button(
                     UiClickEmitter::SELF,
                     //OnUiClickDespawn::new(entity),
                     OnUiClickCommands::new(|commands| {
-                        commands.spawn(Editor);
+                        commands.spawn((Editor, ScenePath(String::from("bob"))));
                     }),
-                    butImg,
+                    ButImg,
                 ));
                 ui.spawn((
                     (LuiBundle {
@@ -95,8 +95,8 @@ fn build_project_button(
             });
     }
 }
-// Here we can listen to UiClick events that hold entity ID, then retrieve that entity from our query
-fn project_button_click_sys(mut events: EventReader<UiClickEvent>, query: Query<&butImg>) {
+// TODO: this shit is fucked, solve later or something
+fn project_button_click_sys(mut events: EventReader<UiClickEvent>, query: Query<&ButImg>) {
     // Iterate over all events
     for event in events.read() {
         // Get our entity

@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy_lunex::prelude::*;
 
 use crate::BoovyStates;
-use crate::Bui::project_button;
+//use crate::Bui::project_button;
 use crate::Bui::ColourBg;
 use crate::Bui::LuiBundle;
 use crate::Bui::ProjectB;
@@ -27,11 +27,11 @@ impl Plugin for PStartpage {
 /// System that builds the route when the component is added
 fn build_startpage(
     mut commands: Commands,
-    assets: Res<AssetServer>,
+    //assets: Res<AssetServer>,
     query: Query<Entity, Added<Startpage>>,
     asset_server: Res<AssetServer>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    // mut meshes: ResMut<Assets<Mesh>>,
+    // mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     for route_entity in &query {
         // Make our route a spatial entity
@@ -46,7 +46,7 @@ fn build_startpage(
                     .spawn((
                         // uitreebundle is for a top dog of da tree lolololol
                         UiTreeBundle::<MainUi>::from(UiTree::new2d("startpage")),
-                        MovableByCamera,
+                        //MovableByCamera,
                         StateScoped(BoovyStates::Menu),
                         Name::new("startpageMarker"),
                     ))
@@ -76,7 +76,7 @@ fn build_startpage(
                             LuiBundle {
                                 path: root.add("Bg"),
                                 layout: UiLayout::window()
-                                    .size((Rl(100.0), Rl(100.0) - Em(2.5)))
+                                    .size((Rl(100.0), Rl(100.0) + Em(2.5)))
                                     .y(Em(2.5))
                                     .pack::<Base>(),
                                 name: Name::new("background"),

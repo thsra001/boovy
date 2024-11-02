@@ -1,6 +1,8 @@
+use avian3d::prelude::*;
 use bevy::prelude::*;
 use bevy_third_person_camera::*;
-use bevy_xpbd_3d::prelude::*;
+
+use crate::BoovyStates;
 
 pub struct LocalPlayerManager;
 
@@ -17,8 +19,11 @@ pub struct Anim(Vec<Handle<AnimationClip>>);
 
 impl Plugin for LocalPlayerManager {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, make_player);
-        app.add_systems(Update, (player_movement)); // , player_anim add when fixed
+        app.add_systems(OnEnter(BoovyStates::Editor), make_player);
+        app.add_systems(
+            Update,
+            (player_movement.run_if(in_state(BoovyStates::Editor))),
+        ); // , player_anim add when fixed
         app.register_type::<Speed>();
     }
 }
@@ -37,7 +42,7 @@ fn make_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         RigidBody::Dynamic,
         LockedAxes::ROTATION_LOCKED,
         LinearDamping(0.75),
-        Collider::capsule(1.5, 0.6),
+        Collider::capsule(0.5, 1.0),
         ThirdPersonCameraTarget,
     ));
     // animations
