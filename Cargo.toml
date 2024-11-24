@@ -47,19 +47,17 @@ bevy = { version = "0.14.2", default-features = false, features = [
 ] }
 # bevy_obj = "0.14.0"
 avian3d = "0.1.2"
-egui="0.29.1"
-bevy_egui="0.30.0"
 bevy-inspector-egui = "0.27.0"
 egui_dock="0.14.0"
 bevy_third_person_camera = { path = "src/CThirdCam" }
 
 #bevy lunex and dependencies
 bevy_lunex = "0.2.4"
-# bevy_mod_picking = { version = "0.20.1", default-features = false, features = [
-#     "debug",
-#     "selection",
-#     "highlight",
-# ] }
+bevy_mod_picking = { version = "0.20.1", default-features = false, features = [
+    "debug",
+    "selection",
+    "highlight",
+] }
 # bevy_eventlistener = "0.8.0"  # maybe uncesscery
 
 strum = "0.26"

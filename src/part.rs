@@ -69,7 +69,7 @@ pub struct PhysicsBundle {
     pub rigidbody_type: RigidBody,
 }
 
-//  mcolour: asset_server.load(pat.clone() + "/color.png")
+//  mcolour: asset_server.load(pat.clone() + "/color.ktx2")
 fn get_mats(mut commands: Commands, asset_server: Res<AssetServer>) {
     println!("yup");
     let mat_holder = commands

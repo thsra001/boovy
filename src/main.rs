@@ -8,15 +8,17 @@ use bevy::{
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_third_person_camera::*;
 // local modules
+mod editor_cam;
+use editor_cam::*;
 mod player;
-use player::LocalPlayerManager;
-mod Bui;
-use Bui::CreatorUi;
+//use player::LocalPlayerManager;
+mod ui;
+use ui::CreatorUi;
 mod part;
 use part::{part_factory, MaterialType, PartUtils, PropType, Scale};
-mod Butils;
+mod utils;
 use std::f32::consts::PI;
-use Butils::*;
+use utils::*;
 
 fn main() {
     App::new()
@@ -31,8 +33,9 @@ fn main() {
         .enable_state_scoped_entities::<BoovyStates>()
         .add_plugins((
             WorldInspectorPlugin::new(),
-            LocalPlayerManager,
-            ThirdPersonCameraPlugin,
+            EditorCameraManager,
+            //LocalPlayerManager,
+            //ThirdPersonCameraPlugin,
             PartUtils,
             CreatorUi,
             PhysicsPlugins::default(),
@@ -88,7 +91,18 @@ fn test_setup(
     );
     commands
         .entity(cubis)
-        .insert((Name::new("cube"), Position(vec3(0.0, 1.0, 0.0))));
+        .insert((Name::new("cube"), Position(vec3(3.0, 5.0, 2.0))));
+
+    //sphere
+    let cubis = part_factory(
+        PropType::BasicProp,
+        &mut commands,
+        &mut materials,
+        &mut meshes,
+    );
+    commands
+        .entity(cubis)
+        .insert((Name::new("cube"), Position(vec3(3.0, 5.0, 2.0))));
 
     // Dirlight
     commands
@@ -119,7 +133,6 @@ fn test_setup(
         .insert(Name::new("DirectionalLight"));
 
     // camera with ambientlight(env)
-    let skypath = asset_server.load("cube.ktx2");
     commands.spawn((
         Camera3dBundle {
             transform: Transform::from_xyz(9.5, 6.0, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
@@ -133,15 +146,15 @@ fn test_setup(
             ..default()
         },
         Skybox {
-            image: skypath.clone(),
+            image: asset_server.load("skybox.ktx2"),
             brightness: 500.0,
         },
         EnvironmentMapLight {
-            diffuse_map: asset_server.load("cube.ktx2"),
-            specular_map: asset_server.load("cube.ktx2"),
+            diffuse_map: asset_server.load("skybox.ktx2"),
+            specular_map: asset_server.load("specSkybox.ktx2"),
             intensity: 100.0,
         },
-        Name::new("camera"),
+        Name::new("cam3d"),
     ));
 }
 //fn serialis() {}
