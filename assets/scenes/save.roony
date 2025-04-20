@@ -4,7 +4,7 @@
     4294967296: (
       components: {
         "bevy_core::name::Name": (
-          hash: 8466048950392692131,
+          hash: 16798012826239669956,
           name: "Scene",
         ),
         "bevy_hierarchy::components::children::Children": ([

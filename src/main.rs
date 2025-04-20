@@ -15,7 +15,10 @@ mod player;
 mod ui;
 use ui::CreatorUi;
 mod part;
-use part::{part_factory, MaterialType, PartUtils, PropType, Scale};
+use part::{
+    part_factory, BasicPropBundle, BasicPropShape, CommonBundle, MaterialType, PartUtils,
+    PhysicsBundle, PropType, Scale,
+};
 mod utils;
 use std::f32::consts::PI;
 use utils::*;
@@ -94,15 +97,14 @@ fn test_setup(
         .insert((Name::new("cube"), Position(vec3(3.0, 5.0, 2.0))));
 
     //sphere
-    let cubis = part_factory(
-        PropType::BasicProp,
-        &mut commands,
-        &mut materials,
-        &mut meshes,
-    );
-    commands
-        .entity(cubis)
-        .insert((Name::new("cube"), Position(vec3(3.0, 5.0, 2.0))));
+    let cubis = BasicPropBundle {
+        common: CommonBundle {
+            name: Name::new("BasicProp"),
+            ..default()
+        },
+        ..default()
+    };
+    commands.spawn(cubis);
 
     // Dirlight
     commands

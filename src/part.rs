@@ -1,3 +1,4 @@
+use avian3d::parry::shape;
 use avian3d::prelude::*;
 use bevy::{math::vec3, prelude::*};
 use bevy_inspector_egui::InspectorOptions;
@@ -12,6 +13,7 @@ impl Plugin for PartUtils {
         app.add_systems(Startup, get_mats);
         app.add_systems(Update, (material_reflect, scale_reflect));
         app.register_type::<MaterialType>();
+        app.register_type::<BasicPropShape>();
         app.register_type::<MatColour>();
         app.register_type::<MatMetalRough>();
         app.register_type::<MatNormal>();
@@ -68,6 +70,33 @@ pub struct PhysicsBundle {
     pub collider: Collider,
     pub rigidbody_type: RigidBody,
 }
+#[derive(Bundle)]
+pub struct BasicPropBundle {
+    pub common: CommonBundle,
+    pub physics: PhysicsBundle,
+    pub shape: BasicPropShape,
+    pub pbr: PbrBundle,
+    pub material_type: MaterialType,
+    pub scale: Scale,
+}
+impl Default for BasicPropBundle {
+    fn default() -> Self {
+        Self {
+            common: CommonBundle {
+                name: Name::new("BasicProp"),
+                prop_type: PropType::BasicProp,
+            },
+            physics: PhysicsBundle {
+                collider: Collider::cuboid(2.0, 2.0, 2.0),
+                rigidbody_type: RigidBody::Dynamic,
+            },
+            shape: BasicPropShape::Cube,
+            pbr: PbrBundle::default(),
+            material_type: MaterialType::Concrete,
+            scale: Scale(Vec3::splat(1.0)),
+        }
+    }
+}
 
 //  mcolour: asset_server.load(pat.clone() + "/color.ktx2")
 fn get_mats(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -123,6 +152,7 @@ pub fn part_factory(
                         ..default()
                     },
                     MaterialType::Concrete,
+                    BasicPropShape::Cube,
                     Scale(vec3(2.0, 2.0, 2.0)),
                     LinearDamping(0.25),
                     AngularDamping(0.2),
@@ -133,6 +163,26 @@ pub fn part_factory(
     };
 }
 
+fn shape_reflect(
+    mut shape_query: Query<
+        (&BasicPropShape, &Handle<Mesh>), // query for what material to change into | query for Props material to modify
+        (Changed<BasicPropShape>),
+    >,
+    mut meshes: &mut ResMut<Assets<Mesh>>, // the query for the Prop with changed material
+) {
+    for (shape_type, mut mesh_ref) in &mut shape_query.iter_mut() {
+        let mut temp = meshes.get_mut(mesh_ref).unwrap();
+
+        let mut shape = match shape_type {
+            BasicPropShape::Cube => Mesh::from(Cuboid::new(1.0, 1.0, 1.0)),
+            BasicPropShape::Cyllinder => Mesh::from(Cylinder::new(1.0, 1.0)),
+            BasicPropShape::Sphere => Mesh::from(Sphere::new(1.0)),
+            BasicPropShape::Wedge => Mesh::from(Sphere::new(1.0)),
+        };
+        temp = &mut shape
+        //mesh_ref = &meshes.add(shape.with_generated_tangents().unwrap());
+    }
+}
 fn material_reflect(
     mut prop_query: Query<
         (&MaterialType, &Handle<StandardMaterial>), // query for what material to change into | query for Props material to modify
