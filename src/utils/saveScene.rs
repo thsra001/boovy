@@ -1,16 +1,13 @@
-use bevy::{prelude::*, tasks::IoTaskPool, utils::Duration};
+use bevy::{prelude::*, tasks::IoTaskPool};
 use std::{fs::File, io::Write};
 
-use crate::{
-    part::{part_factory, PropType},
-    BoovyStates,
-};
+use crate::{prop::PropType, BoovyStates};
 
 pub struct PSaveScene; // plugin export// it mark ui ( just treat it like MainUi in lunex docs)
 
 impl Plugin for PSaveScene {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(BoovyStates::Editor), save_scene);
+        app.add_systems(OnEnter(BoovyStates::EditorLoad), save_scene);
     }
 }
 

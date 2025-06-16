@@ -1,24 +1,29 @@
 // bevy 13.2
-
 use avian3d::prelude::*;
 use bevy::{
-    app::AppExit, core_pipeline::Skybox, math::vec3, pbr::CascadeShadowConfigBuilder, prelude::*,
-    window::ExitCondition,
+    app::AppExit,
+    core_pipeline::Skybox,
+    math::vec3,
+    pbr::CascadeShadowConfigBuilder,
+    prelude::*,
+    state::commands,
+    window::{ExitCondition, WindowResolution},
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use bevy_third_person_camera::*;
+//use bevy_third_person_camera::*;
 // local modules
-mod editor_cam;
-use editor_cam::*;
+mod editor;
+use bevy_skein::SkeinPlugin;
+use editor::*;
 mod player;
-//use player::LocalPlayerManager;
-mod ui;
-use ui::CreatorUi;
-mod part;
-use part::{
-    part_factory, BasicPropBundle, BasicPropShape, CommonBundle, MaterialType, PartUtils,
-    PhysicsBundle, PropType, Scale,
-};
+use player::LocalPlayerManager;
+mod testplate;
+use testplate::{testPlugin, Lake};
+//mod ui;
+//use ui::CreatorUi;
+
+mod prop;
+use prop::{BasicProp, MaterialType, MeshProp, PartUtils, Scale};
 mod utils;
 use std::f32::consts::PI;
 use utils::*;
@@ -28,25 +33,28 @@ fn main() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Boovy creator".into(),
+                resolution: WindowResolution::default().with_scale_factor_override(0.9),
                 ..default()
             }),
             exit_condition: ExitCondition::OnPrimaryClosed, // Close our app when all windows close
             close_when_requested: true,
         }))
+        .init_state::<BoovyStates>()
         .enable_state_scoped_entities::<BoovyStates>()
+        .register_type::<Lake>()
         .add_plugins((
+            SkeinPlugin::default(),
             WorldInspectorPlugin::new(),
-            EditorCameraManager,
-            //LocalPlayerManager,
-            //ThirdPersonCameraPlugin,
+            PEditor,
+            LocalPlayerManager,
             PartUtils,
-            CreatorUi,
-            PhysicsPlugins::default(),
+            PhysicsPlugins::default().set(PhysicsInterpolationPlugin::extrapolate_all()),
             PhysicsDebugPlugin::default(),
             LoadButils,
+            testPlugin,
         ))
         .add_systems(Update, kys)
-        .add_systems(OnEnter(BoovyStates::Editor), test_setup)
+        .add_systems(OnEnter(BoovyStates::EditorLoad), test_setup)
         .run();
 }
 
@@ -54,8 +62,9 @@ fn main() {
 pub enum BoovyStates {
     //#[default]
     Loading, //preloading before showing app
+    Menu,    //  select game to edit
     #[default]
-    Menu, //  select game to edit
+    EditorLoad, // laod scene first
     Editor,  // editor to edit game
     Game,    // game testing
 }
@@ -64,20 +73,17 @@ fn test_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut asset_server: Res<AssetServer>,
+    mut next_state: ResMut<NextState<BoovyStates>>,
+    asset_server: Res<AssetServer>,
 ) {
+    // todo: model
     let scene = commands.spawn(Name::new("scene"));
     // square base
-    let bonk = part_factory(
-        PropType::BasicProp,
-        &mut commands,
-        &mut materials,
-        &mut meshes,
-    );
+    let bonk = BasicProp::create(&mut commands, &mut materials, &mut meshes);
     commands.entity(bonk).insert((
         RigidBody::Static,
         Name::new("ground"),
-        Position(vec3(0.0, -1.0, 0.0)),
+        Position(vec3(0.0, -15.0, 0.0)),
         Scale(Vec3 {
             x: 200.0,
             y: 10.0,
@@ -85,79 +91,75 @@ fn test_setup(
         }),
         MaterialType::Grass,
     ));
-    //cube
-    let cubis = part_factory(
-        PropType::BasicProp,
+    // meshtest
+    let ojanga = MeshProp::create(
+        String::from("meshes/error.glb"),
         &mut commands,
         &mut materials,
         &mut meshes,
+        &asset_server,
     );
+    commands.entity(ojanga).insert((
+        Name::new("cooler mesh"),
+        Position(vec3(-3.0, 5.0, 2.0)),
+        //MaterialType::ConcreteTiles,
+    ));
+    //cube
+    let obama = BasicProp::create(&mut commands, &mut materials, &mut meshes);
+    commands.entity(obama).insert((
+        Name::new("cooler cube"),
+        Position(vec3(-3.0, 5.0, 2.0)),
+        MaterialType::ConcreteTiles,
+    ));
+    //cube2
+    let cubis = BasicProp::create(&mut commands, &mut materials, &mut meshes);
     commands
         .entity(cubis)
         .insert((Name::new("cube"), Position(vec3(3.0, 5.0, 2.0))));
 
-    //sphere
-    let cubis = BasicPropBundle {
-        common: CommonBundle {
-            name: Name::new("BasicProp"),
-            ..default()
-        },
-        ..default()
-    };
-    commands.spawn(cubis);
-
     // Dirlight
     commands
-        .spawn(DirectionalLightBundle {
-            directional_light: DirectionalLight {
-                shadows_enabled: true,
+        .spawn((
+            DirectionalLight {
                 illuminance: 1000.0,
+                shadows_enabled: true,
                 ..default()
             },
-            transform: Transform {
+            Transform {
                 translation: Vec3::new(0.0, 2.0, 0.0),
                 rotation: Quat::from_rotation_x(-PI / 4.),
                 ..default()
             },
-            // I STOLE THIS FROM THE EXAMPLE PAGE
-            // The default cascade config is designed to handle large scenes.
-            // As this example has a much smaller world, we can tighten the shadow
-            // bounds for better visual quality.
-            cascade_shadow_config: CascadeShadowConfigBuilder {
+            CascadeShadowConfigBuilder {
                 first_cascade_far_bound: 4.0,
                 maximum_distance: 200.0,
                 num_cascades: 4,
                 ..default()
             }
-            .into(),
-            ..default()
-        })
+            .build(),
+        ))
         .insert(Name::new("DirectionalLight"));
 
     // camera with ambientlight(env)
     commands.spawn((
-        Camera3dBundle {
-            transform: Transform::from_xyz(9.5, 6.0, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
-            ..default()
-        },
-        ThirdPersonCamera {
-            offset_enabled: true,
-            offset: Offset::new(0.0, 0.8),
-            zoom: Zoom::new(1.5, 100.0),
-            cursor_lock_key: KeyCode::ControlLeft,
-            ..default()
-        },
+        Camera3d::default(),
+        Transform::from_xyz(9.5, 6.0, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
         Skybox {
             image: asset_server.load("skybox.ktx2"),
             brightness: 500.0,
+            ..default()
         },
         EnvironmentMapLight {
             diffuse_map: asset_server.load("skybox.ktx2"),
             specular_map: asset_server.load("specSkybox.ktx2"),
             intensity: 100.0,
+            ..default()
         },
         Name::new("cam3d"),
     ));
+
+    // loaded scene, now we go to editor
+    next_state.set(BoovyStates::Editor)
 }
 //fn serialis() {}
 fn kys(input: Res<ButtonInput<KeyCode>>, mut exit: EventWriter<AppExit>) {
